@@ -5,6 +5,7 @@ import logging
 
 from app.api.chat import router as chat_router
 from app.api.timeline import router as timeline_router
+from app.api.multimodal import router as multimodal_router
 from app.core import initialize_agents
 
 # Configure logging
@@ -34,7 +35,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="LifeAI - Multi-Agent AI Platform",
     description="Wieloagentowa platforma AI wspierająca użytkowników w życiu codziennym",
-    version="2.0.0",
+    version="2.1.0",
     lifespan=lifespan
 )
 
@@ -49,12 +50,13 @@ app.add_middleware(
 # ROUTERS
 app.include_router(chat_router)
 app.include_router(timeline_router)
+app.include_router(multimodal_router)
 
 
 @app.get("/health")
 def health():
     """Health check endpoint."""
-    return {"status": "ok", "version": "2.0.0"}
+    return {"status": "ok", "version": "2.1.0"}
 
 
 @app.get("/")
@@ -62,7 +64,7 @@ def root():
     """Root endpoint with API information."""
     return {
         "name": "LifeAI API",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "description": "Multi-agent AI platform",
         "endpoints": {
             "health": "/health",

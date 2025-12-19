@@ -1,6 +1,6 @@
 # LifeAI - Wieloagentowa Platforma AI
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![Version](https://img.shields.io/badge/version-2.1.0-blue)
 ![Python](https://img.shields.io/badge/python-3.11+-green)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-teal)
 ![Next.js](https://img.shields.io/badge/Next.js-14+-black)
@@ -21,8 +21,19 @@ Wieloagentowa, multimodalna platforma AI wspierająca użytkowników w życiu co
 - **LLM-based Intent Classification** - Inteligentne rozpoznawanie intencji użytkownika
 - **Dynamic Agent Routing** - Automatyczny wybór odpowiedniego agenta
 - **Multi-Agent Collaboration** - Współpraca agentów dla złożonych zapytań
+- **Vector Database Memory** - Długookresowa pamięć z semantic search
+- **Multimodal AI** - Obsługa głosu, obrazów i tekstu
 - **Context Management** - Pamięć konwersacji i personalizacja
 - **Multilingual Support** - Polski, Angielski, Niemiecki
+
+### Nowe Funkcjonalności (v2.1)
+- ✅ **Voice Input** - Speech-to-text z OpenAI Whisper (100+ języków)
+- ✅ **Voice Output** - Text-to-speech z naturalnymi głosami (6 opcji)
+- ✅ **Vision AI** - Analiza obrazów z GPT-4 Vision
+- ✅ **Food Recognition** - Rozpoznawanie jedzenia i analiza kalorii
+- ✅ **OCR** - Ekstrakcja tekstu z obrazów
+- ✅ **Long-term Memory** - Vector database dla kontekstu i personalizacji
+- ✅ **Semantic Search** - Wyszukiwanie istotnych wspomnień
 
 ## 🚀 Szybki Start
 
@@ -111,6 +122,47 @@ LifeAI/
 ├── ARCHITECTURE.md               # Architecture documentation
 ├── PROJECT_STRUCTURE.md          # Project structure details
 └── docker-compose.yml
+```
+
+## 🎙️ Multimodal API
+
+### Voice Input (Speech-to-Text)
+```bash
+curl -X POST http://localhost:8000/multimodal/transcribe \
+  -F "file=@audio.mp3" \
+  -F "language=pl"
+```
+
+### Voice Output (Text-to-Speech)
+```bash
+curl -X POST http://localhost:8000/multimodal/synthesize \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Witaj! Jak mogę Ci pomóc?",
+    "voice": "nova",
+    "high_quality": true
+  }' --output speech.mp3
+```
+
+### Image Analysis
+```bash
+curl -X POST http://localhost:8000/multimodal/analyze-image \
+  -F "file=@image.jpg" \
+  -F "prompt=Co jest na tym zdjęciu?" \
+  -F "analysis_type=general"
+```
+
+### Food Recognition
+```bash
+curl -X POST http://localhost:8000/multimodal/analyze-image \
+  -F "file=@meal.jpg" \
+  -F "analysis_type=food"
+```
+
+### OCR (Text Extraction)
+```bash
+curl -X POST http://localhost:8000/multimodal/ocr \
+  -F "file=@document.jpg"
 ```
 
 ## 🔧 API Użycie
@@ -297,6 +349,6 @@ W przygotowaniu.
 
 ---
 
-**Wersja:** 2.0.0
+**Wersja:** 2.1.0
 **Status:** Development
 **Ostatnia aktualizacja:** 2025-12-19
