@@ -8,6 +8,9 @@ class MessageIn(BaseModel):
     session_id: str
     message: str
 
+class SessionIn(BaseModel):
+    session_id: str
+
 @router.post("/start")
 def start_chat():
     return ConversationService.start_session()
@@ -20,5 +23,5 @@ def send_message(data: MessageIn):
     )
 
 @router.post("/end")
-def end_chat(session_id: str):
-    return ConversationService.end_session(session_id)
+def end_chat(data: SessionIn):
+    return ConversationService.end_session(data.session_id)

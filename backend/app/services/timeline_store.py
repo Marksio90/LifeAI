@@ -1,4 +1,5 @@
 import uuid
+import json
 from datetime import datetime
 from sqlalchemy import text
 from app.db.session import SessionLocal
@@ -41,7 +42,7 @@ def save_snapshot(snapshot: dict):
                 "id": str(uuid.uuid4()),
                 "created_at": datetime.utcnow(),
                 "summary": snapshot.get("summary"),
-                "themes": snapshot.get("themes"),
+                "themes": json.dumps(snapshot.get("themes", [])),
                 "core_question": snapshot.get("core_question"),
                 "emotional_tone": snapshot.get("emotional_tone"),
                 "confidence": snapshot.get("confidence"),

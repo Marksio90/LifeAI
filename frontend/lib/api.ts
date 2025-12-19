@@ -18,8 +18,12 @@ export async function sendMessage(sessionId: string, message: string) {
 }
 
 export async function endChat(sessionId: string) {
-  const res = await fetch(`${API_URL}/chat/end?session_id=${sessionId}`, {
+  const res = await fetch(`${API_URL}/chat/end`, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_id: sessionId,
+    }),
   });
   return res.json();
 }
