@@ -1,9 +1,24 @@
 fastapi
 uvicorn[standard]
 pydantic
+pydantic-settings
 python-dotenv
 sqlalchemy
+alembic
 psycopg2-binary
 httpx
 openai
 tiktoken
+
+# Security
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+bcrypt
+
+# Rate limiting
+slowapi
+
+# Additional utilities
+python-dateutil
+pytz
