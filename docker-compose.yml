@@ -1,4 +1,5 @@
 services:
+  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: lifeai-postgres
@@ -9,6 +10,7 @@ services:
       POSTGRES_DB: lifeai
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - "5432:5432"
     healthcheck:
@@ -19,6 +21,7 @@ services:
     networks:
       - lifeai-network
 
+  # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: lifeai-redis
@@ -33,8 +36,88 @@ services:
     networks:
       - lifeai-network
 
+  # Backend API (FastAPI)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lifeai-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://lifeai:lifeai_password@postgres:5432/lifeai
+
+      # Redis
+      REDIS_URL: redis://redis:6379/0
+
+      # Security
+      SECRET_KEY: dev-secret-key-change-in-production
+
+      # OpenAI - CHANGE THIS!
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-placeholder-key}
+
+      # Vector DB (in-memory for dev, pinecone for prod)
+      VECTOR_DB_TYPE: in-memory
+
+      # Environment
+      ENVIRONMENT: development
+      DEBUG: "true"
+      LOG_LEVEL: INFO
+
+      # CORS
+      ALLOWED_ORIGINS: http://localhost:3000,http://frontend:3000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_cache:/root/.cache
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health/live')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - lifeai-network
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lifeai-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/', (r) => {r.statusCode !== 200 && process.exit(1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - lifeai-network
+
 volumes:
   postgres_data:
+    driver: local
+  backend_cache:
     driver: local
 
 networks:
