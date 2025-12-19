@@ -2,6 +2,7 @@ from typing import Dict, Optional
 from app.schemas.common import Context, Message, OrchestratorResponse, Language
 from app.core.router import route_message
 from app.core.agent_registry import AgentRegistry
+from app.memory.context_manager import get_context_manager
 import logging
 import uuid
 from datetime import datetime
@@ -24,6 +25,7 @@ class Orchestrator:
         """Initialize the orchestrator."""
         self.registry = AgentRegistry()
         self.sessions: Dict[str, Context] = {}
+        self.context_manager = get_context_manager()
 
     def create_session(
         self,
@@ -88,8 +90,9 @@ class Orchestrator:
             )
             context.history.append(user_msg)
 
-            # TODO: Enrich context with memories (vector search)
-            # context.relevant_memories = await self._fetch_relevant_memories(context)
+            # Enrich context with relevant memories from vector search
+            context = await self.context_manager.enrich_context(context, user_message)
+            logger.debug(f"Enriched context with {len(context.relevant_memories)} memories")
 
             # Route to appropriate agent(s)
             response = await route_message(user_message, context)
@@ -106,8 +109,12 @@ class Orchestrator:
             # Update session
             self.sessions[session_id] = context
 
-            # TODO: Store conversation in long-term memory
-            # await self._store_memory(context, response)
+            # Store conversation in long-term memory
+            await self.context_manager.store_conversation(
+                context=context,
+                user_message=user_message,
+                assistant_response=response.content
+            )
 
             return response
 
