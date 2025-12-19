@@ -1,6 +1,6 @@
 import json
 from typing import List, Dict
-from app.llm.client import call_llm  # dostosuj jeśli masz inną nazwę
+from app.services.llm_client import call_llm
 
 DEFAULT_SNAPSHOT = {
     "summary": None,
@@ -34,7 +34,8 @@ Conversation:
 """
 
     try:
-        raw = call_llm(prompt)
+        messages = [{"role": "system", "content": prompt}]
+        raw = call_llm(messages)
 
         data = json.loads(raw)
 
