@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from app.services.conversation import ConversationService
 from pydantic import BaseModel
 
-router = APIRouter()
+router = APIRouter(prefix="/chat", tags=["chat"])
 
 class MessageIn(BaseModel):
     session_id: str

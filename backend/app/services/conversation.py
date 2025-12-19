@@ -30,14 +30,10 @@ class ConversationService:
         history = SESSIONS.get(session_id, [])
 
         snapshot_json = generate_snapshot(history)
+        if not snapshot_json:
+            return {"memory_snapshot": None}
 
-        try:
-            snapshot = json.loads(snapshot_json)
-        except json.JSONDecodeError:
-            snapshot = None
-
-        if snapshot:
-            save_snapshot(snapshot)
+        snapshot = json.loads(snapshot_json)
+        save_snapshot(snapshot)
 
         return {"memory_snapshot": snapshot}
-

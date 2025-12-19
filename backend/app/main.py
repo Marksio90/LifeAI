@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import chat, timeline
+
+from app.api.chat import router as chat_router
+from app.api.timeline import router as timeline_router
 
 app = FastAPI(title="Life AI MVP")
 
@@ -12,8 +14,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(chat.router, prefix="/chat")
-app.include_router(timeline.router, prefix="/timeline")
+# ROUTERS
+app.include_router(chat_router)
+app.include_router(timeline_router)
+
 
 @app.get("/health")
 def health():

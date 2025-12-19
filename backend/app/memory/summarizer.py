@@ -2,15 +2,7 @@ import json
 from typing import List, Dict
 from app.services.llm_client import call_llm
 
-DEFAULT_SNAPSHOT = {
-    "summary": None,
-    "themes": [],
-    "core_question": None,
-    "emotional_tone": None,
-    "confidence": 0.0,
-}
-
-def generate_snapshot(history: List[Dict]) -> str:
+def generate_snapshot(history: list[dict]) -> str:
     if not history:
         return json.dumps(DEFAULT_SNAPSHOT)
 
@@ -37,19 +29,18 @@ Conversation:
         messages = [{"role": "system", "content": prompt}]
         raw = call_llm(messages)
 
-        data = json.loads(raw)
+    user_messages = [m["content"] for m in history if m["role"] == "user"]
 
-        # 🔒 WALIDACJA POL
-        snapshot = {
-            "summary": data.get("summary"),
-            "themes": data.get("themes", []),
-            "core_question": data.get("core_question"),
-            "emotional_tone": data.get("emotional_tone"),
-            "confidence": float(data.get("confidence", 0.0)),
-        }
+    summary = user_messages[-1] if user_messages else None
 
-        return json.dumps(snapshot)
+    snapshot = {
+        "id": str(uuid.uuid4()),
+        "created_at": datetime.utcnow().isoformat(),
+        "summary": summary,
+        "themes": None,
+        "core_question": None,
+        "emotional_tone": None,
+        "confidence": None,
+    }
 
-    except Exception as e:
-        print("SNAPSHOT ERROR:", e)
-        return json.dumps(DEFAULT_SNAPSHOT)
+    return json.dumps(snapshot)
