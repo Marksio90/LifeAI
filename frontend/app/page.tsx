@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { startChat } from "@/lib/api";
-import { setSessionId } from "@/lib/session";
+import { startChat } from "../lib/api";
+import { setSessionId } from "../lib/session";
 
 export default function Home() {
   const router = useRouter();
