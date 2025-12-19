@@ -1,0 +1,80 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.REGISTRY_URL }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.REGISTRY_URL }}/lifeai-backend:${{ github.sha }}
+            ${{ secrets.REGISTRY_URL }}/lifeai-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.REGISTRY_URL }}/lifeai-frontend:${{ github.sha }}
+            ${{ secrets.REGISTRY_URL }}/lifeai-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.API_URL }}
+
+      - name: Deploy to Kubernetes
+        if: ${{ github.event.inputs.environment == 'production' }}
+        run: |
+          echo "Deploy to production Kubernetes cluster"
+          # Add your Kubernetes deployment commands here
+          # kubectl set image deployment/backend backend=${{ secrets.REGISTRY_URL }}/lifeai-backend:${{ github.sha }}
+          # kubectl set image deployment/frontend frontend=${{ secrets.REGISTRY_URL }}/lifeai-frontend:${{ github.sha }}
+
+      - name: Run database migrations
+        if: ${{ github.event.inputs.environment == 'production' }}
+        run: |
+          echo "Running database migrations"
+          # Add migration commands here
+          # kubectl exec deployment/backend -- alembic upgrade head
+
+      - name: Health check
+        run: |
+          echo "Performing health check"
+          # Add health check commands here
+          # curl -f ${{ secrets.API_URL }}/health || exit 1

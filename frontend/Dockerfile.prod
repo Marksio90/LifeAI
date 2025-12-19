@@ -1,0 +1,54 @@
+# Production Dockerfile for Frontend
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy application files
+COPY . .
+
+# Build arguments
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+# Build application
+RUN npm run build
+
+# Production image
+FROM node:18-alpine AS runner
+
+# Set environment
+ENV NODE_ENV=production
+
+# Create app user
+RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+
+# Set working directory
+WORKDIR /app
+
+# Copy necessary files from builder
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+# Change ownership
+RUN chown -R nextjs:nodejs /app
+
+# Switch to app user
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000/', (r) => {r.statusCode !== 200 && process.exit(1)})"
+
+# Start application
+CMD ["node", "server.js"]
