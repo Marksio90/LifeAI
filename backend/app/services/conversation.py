@@ -1,8 +1,8 @@
 import uuid
+import json
 from app.agents.chaos_agent import run_chaos_agent
 from app.memory.summarizer import generate_snapshot
 from app.services.timeline_store import save_snapshot
-import json
 
 SESSIONS = {}
 
@@ -30,9 +30,14 @@ class ConversationService:
         history = SESSIONS.get(session_id, [])
 
         snapshot_json = generate_snapshot(history)
-        snapshot = json.loads(snapshot_json)
 
-        save_snapshot(snapshot)
+        try:
+            snapshot = json.loads(snapshot_json)
+        except json.JSONDecodeError:
+            snapshot = None
+
+        if snapshot:
+            save_snapshot(snapshot)
 
         return {"memory_snapshot": snapshot}
 
