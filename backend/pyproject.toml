@@ -1,6 +1,4 @@
-[tool:pytest]
-
-[tool:pytest.ini_options]
+[tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
@@ -14,7 +12,7 @@ addopts = [
     "--cov-fail-under=70",
 ]
 
-[tool:coverage.run]
+[tool.coverage.run]
 source = ["app"]
 omit = [
     "*/tests/*",
@@ -23,7 +21,7 @@ omit = [
     "*/config.py",
 ]
 
-[tool:coverage.report]
+[tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
@@ -33,3 +31,7 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "@abstractmethod",
 ]
+
+[tool.alembic]
+script_location = "alembic"
+prepend_sys_path = ["."]
