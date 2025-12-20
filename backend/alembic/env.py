@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 # Import all models
 from app.db.base import Base
-from app.models import User, Conversation, Feedback, AgentInteraction, Timeline
+from app.models import User, Conversation, Feedback, AgentInteraction
 
 # this is the Alembic Config object
 config = context.config
