@@ -76,7 +76,7 @@ services:
     volumes:
       - ./backend:/app
       - backend_cache:/root/.cache
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health/live')"]
       interval: 30s
