@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import Optional
 from app.core.orchestrator import get_orchestrator
 from app.schemas.common import Language
+from app.models.user import User
+from app.security.auth import get_current_user
 import logging
 
 logger = logging.getLogger(__name__)
@@ -28,7 +30,10 @@ class SessionEndRequest(BaseModel):
 
 
 @router.post("/start")
-async def start_chat(request: SessionCreateRequest = SessionCreateRequest()):
+async def start_chat(
+    request: SessionCreateRequest = SessionCreateRequest(),
+    current_user: User = Depends(get_current_user)
+):
     """
     Start a new chat session.
 
@@ -38,7 +43,7 @@ async def start_chat(request: SessionCreateRequest = SessionCreateRequest()):
     try:
         orchestrator = get_orchestrator()
         session_id = orchestrator.create_session(
-            user_id=request.user_id,
+            user_id=str(current_user.id),
             language=request.language
         )
 

@@ -8,6 +8,7 @@ import logging
 from app.db.session import get_db
 from app.models.conversation import Conversation
 from app.models.user import User
+from app.security.auth import get_current_user
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -42,6 +43,55 @@ class ConversationDetail(BaseModel):
     ended_at: Optional[str]
     summary: Optional[str]
     main_topics: List[str]
+
+
+@router.get("/", response_model=List[ConversationSummary])
+async def get_current_user_timeline(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    days: Optional[int] = Query(None, ge=1, le=365),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get timeline for currently authenticated user.
+
+    Returns conversations sorted by most recent first.
+    """
+    try:
+        query = db.query(Conversation).filter(Conversation.user_id == str(current_user.id))
+
+        # Filter by date range if specified
+        if days:
+            since = datetime.utcnow() - timedelta(days=days)
+            query = query.filter(Conversation.created_at >= since)
+
+        # Order by most recent first
+        query = query.order_by(Conversation.created_at.desc())
+
+        # Apply pagination
+        conversations = query.offset(offset).limit(limit).all()
+
+        logger.info(f"Retrieved {len(conversations)} conversations for user {current_user.id}")
+
+        return [
+            ConversationSummary(
+                id=str(conv.id),
+                session_id=conv.session_id,
+                title=conv.title or f"Conversation from {conv.created_at.strftime('%Y-%m-%d %H:%M')}",
+                message_count=conv.message_count,
+                agents_used=conv.agents_used or [],
+                created_at=conv.created_at.isoformat(),
+                updated_at=conv.updated_at.isoformat() if conv.updated_at else None,
+                summary=conv.summary,
+                main_topics=conv.main_topics or []
+            )
+            for conv in conversations
+        ]
+
+    except Exception as e:
+        logger.error(f"Error fetching timeline: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch timeline")
 
 
 @router.get("/conversations", response_model=List[ConversationSummary])
