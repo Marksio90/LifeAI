@@ -1,0 +1,23 @@
+* text=auto
+
+# Shell scripts should always use LF
+*.sh text eol=lf
+
+# Python files
+*.py text eol=lf
+
+# Explicitly declare text files
+*.md text
+*.txt text
+*.json text
+*.yml text
+*.yaml text
+
+# Denote binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mp3 binary
+*.mp4 binary
