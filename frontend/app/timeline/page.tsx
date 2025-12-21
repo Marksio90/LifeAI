@@ -7,11 +7,15 @@ import Navigation from "@/components/Navigation";
 import { getTimeline } from "@/lib/api";
 
 interface TimelineItem {
+  id: string;
   session_id: string;
-  timestamp: string;
-  summary: string;
-  main_topics: string[];
+  title: string | null;
   message_count: number;
+  agents_used: string[];
+  created_at: string;
+  updated_at: string | null;
+  summary: string | null;
+  main_topics: string[];
 }
 
 export default function TimelinePage() {
@@ -35,7 +39,8 @@ export default function TimelinePage() {
   const loadTimeline = async () => {
     try {
       const data = await getTimeline();
-      setItems(data.timeline || []);
+      // Backend returns array directly, not wrapped in {timeline: []}
+      setItems(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error loading timeline:", error);
     } finally {
@@ -96,15 +101,15 @@ export default function TimelinePage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {items.map((item, i) => (
-                <div key={i} className="card hover:shadow-xl transition-shadow">
+              {items.map((item) => (
+                <div key={item.id} className="card hover:shadow-xl transition-shadow">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                        {item.summary || "Rozmowa bez podsumowania"}
+                        {item.title || "Rozmowa bez tytułu"}
                       </h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {new Date(item.timestamp).toLocaleString("pl-PL", {
+                        {new Date(item.created_at).toLocaleString("pl-PL", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
@@ -117,6 +122,12 @@ export default function TimelinePage() {
                       {item.message_count} wiadomości
                     </span>
                   </div>
+
+                  {item.summary && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      {item.summary}
+                    </p>
+                  )}
 
                   {item.main_topics && item.main_topics.length > 0 && (
                     <div className="flex flex-wrap gap-2">
