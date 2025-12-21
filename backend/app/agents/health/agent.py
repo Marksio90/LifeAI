@@ -49,7 +49,7 @@ class HealthAgent(BaseAgent):
             for msg in context.history[-4:]:
                 messages.append({"role": msg.role, "content": msg.content})
 
-            response_content = call_llm(messages)
+            response_content = await call_llm(messages)
 
             # Add disclaimer if medical topic detected
             if self._is_medical_topic(response_content):

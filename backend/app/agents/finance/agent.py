@@ -70,7 +70,7 @@ class FinanceAgent(BaseAgent):
                 })
 
             # Call LLM
-            response_content = call_llm(messages)
+            response_content = await call_llm(messages)
 
             # Determine follow-up actions
             follow_up_actions = self._suggest_follow_up_actions(intent, response_content)

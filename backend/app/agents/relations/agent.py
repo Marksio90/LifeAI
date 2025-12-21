@@ -50,7 +50,7 @@ class RelationsAgent(BaseAgent):
             for msg in context.history[-5:]:
                 messages.append({"role": msg.role, "content": msg.content})
 
-            response_content = call_llm(messages)
+            response_content = await call_llm(messages)
 
             # Check for crisis indicators
             if self._detect_crisis(context.history[-1].content if context.history else ""):
