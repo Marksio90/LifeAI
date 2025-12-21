@@ -50,7 +50,7 @@ class TaskManagementAgent(BaseAgent):
             for msg in context.history[-4:]:
                 messages.append({"role": msg.role, "content": msg.content})
 
-            response_content = call_llm(messages)
+            response_content = await call_llm(messages)
 
             follow_up_actions = self._suggest_follow_up_actions(response_content)
 

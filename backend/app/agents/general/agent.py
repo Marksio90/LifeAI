@@ -69,7 +69,7 @@ class GeneralAgent(BaseAgent):
                 })
 
             # Call LLM
-            response_content = call_llm(messages)
+            response_content = await call_llm(messages)
 
             # Create response
             return AgentResponse(

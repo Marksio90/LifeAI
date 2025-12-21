@@ -73,7 +73,7 @@ Return only the JSON object, no other text."""
 
             # Call LLM
             messages = [{"role": "system", "content": prompt}]
-            response = call_llm(messages)
+            response = await call_llm(messages)
 
             # Parse JSON response
             classification = self._parse_classification(response)
