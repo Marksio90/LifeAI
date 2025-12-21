@@ -74,7 +74,7 @@ async def get_current_user_timeline(
 
         logger.info(f"Retrieved {len(conversations)} conversations for user {current_user.id}")
 
-        return [
+        result = [
             ConversationSummary(
                 id=str(conv.id),
                 session_id=conv.session_id,
@@ -88,6 +88,13 @@ async def get_current_user_timeline(
             )
             for conv in conversations
         ]
+
+        # Debug logging
+        logger.info(f"Returning timeline data: {len(result)} items")
+        if result:
+            logger.info(f"First item: id={result[0].id}, title={result[0].title}, messages={result[0].message_count}")
+
+        return result
 
     except Exception as e:
         logger.error(f"Error fetching timeline: {e}", exc_info=True)
