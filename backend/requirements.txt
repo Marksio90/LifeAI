@@ -15,7 +15,7 @@ tiktoken
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
-bcrypt
+bcrypt==3.2.2  # Pin to 3.2.2 for passlib compatibility (4.x breaks passlib)
 
 # Rate limiting
 slowapi
