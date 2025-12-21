@@ -39,6 +39,10 @@ export default function TimelinePage() {
   const loadTimeline = async () => {
     try {
       const data = await getTimeline();
+      console.log("Timeline API response:", data);
+      console.log("Is array?", Array.isArray(data));
+      console.log("Data length:", data?.length);
+
       // Backend returns array directly, not wrapped in {timeline: []}
       setItems(Array.isArray(data) ? data : []);
     } catch (error) {
