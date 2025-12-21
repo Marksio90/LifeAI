@@ -3,6 +3,8 @@ from app.schemas.common import Context, Message, OrchestratorResponse, Language
 from app.core.router import route_message
 from app.core.agent_registry import AgentRegistry
 from app.memory.context_manager import get_context_manager
+from app.models.conversation import Conversation
+from app.db.session import SessionLocal
 import logging
 import uuid
 from datetime import datetime
@@ -139,8 +141,8 @@ class Orchestrator:
         if session_id in self.sessions:
             context = self.sessions[session_id]
 
-            # TODO: Generate final summary and store in database
-            # await self._generate_session_summary(context)
+            # Save conversation to database
+            self._save_conversation_to_db(context)
 
             del self.sessions[session_id]
             logger.info(f"Ended session: {session_id}")
@@ -219,6 +221,66 @@ class Orchestrator:
         """
         # Placeholder for future implementation
         pass
+
+    def _save_conversation_to_db(self, context: Context):
+        """
+        Save conversation to database.
+
+        Args:
+            context: Conversation context to save
+        """
+        try:
+            db = SessionLocal()
+
+            # Extract agents used from context
+            agents_used = []
+            for msg in context.history:
+                if msg.role == "assistant" and msg.metadata:
+                    agent_id = msg.metadata.get("agent_id")
+                    if agent_id and agent_id not in agents_used:
+                        agents_used.append(agent_id)
+
+            # Prepare messages for storage
+            messages_json = [
+                {
+                    "role": msg.role,
+                    "content": msg.content,
+                    "timestamp": msg.timestamp.isoformat(),
+                    "metadata": msg.metadata
+                }
+                for msg in context.history
+            ]
+
+            # Generate simple title from first user message
+            title = None
+            for msg in context.history:
+                if msg.role == "user":
+                    title = msg.content[:50] + ("..." if len(msg.content) > 50 else "")
+                    break
+
+            # Create conversation record
+            conversation = Conversation(
+                user_id=context.user_id,
+                session_id=context.session_id,
+                title=title,
+                language=context.language.value,
+                messages=messages_json,
+                message_count=len(context.history),
+                agents_used=agents_used,
+                ended_at=datetime.utcnow()
+            )
+
+            db.add(conversation)
+            db.commit()
+            logger.info(f"Saved conversation {context.session_id} to database")
+
+        except Exception as e:
+            logger.error(f"Error saving conversation to database: {e}", exc_info=True)
+            if db:
+                db.rollback()
+        finally:
+            if db:
+                db.close()
 
     def get_stats(self) -> Dict:
         """Get orchestrator statistics."""
