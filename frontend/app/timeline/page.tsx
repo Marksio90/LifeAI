@@ -106,7 +106,11 @@ export default function TimelinePage() {
           ) : (
             <div className="space-y-4">
               {items.map((item) => (
-                <div key={item.id} className="card hover:shadow-xl transition-shadow">
+                <div
+                  key={item.id}
+                  className="card hover:shadow-xl transition-shadow cursor-pointer"
+                  onClick={() => router.push(`/conversation/${item.id}`)}
+                >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">

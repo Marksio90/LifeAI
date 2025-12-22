@@ -51,6 +51,27 @@ export async function getTimeline() {
   return res.json();
 }
 
+export async function getConversation(conversationId: string) {
+  const res = await fetch(`${API_URL}/chat/conversation/${conversationId}`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to fetch conversation');
+  }
+  return res.json();
+}
+
+export async function resumeConversation(conversationId: string) {
+  const res = await fetch(`${API_URL}/chat/resume/${conversationId}`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to resume conversation');
+  }
+  return res.json();
+}
+
 // Multimodal API functions
 export async function transcribeAudio(audioBlob: Blob, language?: string): Promise<any> {
   const formData = new FormData();
