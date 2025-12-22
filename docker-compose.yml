@@ -5,9 +5,9 @@ services:
     container_name: lifeai-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: lifeai
-      POSTGRES_PASSWORD: lifeai_password
-      POSTGRES_DB: lifeai
+      POSTGRES_USER: ${POSTGRES_USER:-lifeai}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lifeai_password}
+      POSTGRES_DB: ${POSTGRES_DB:-lifeai}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -50,27 +50,27 @@ services:
         condition: service_healthy
     environment:
       # Database
-      DATABASE_URL: postgresql://lifeai:lifeai_password@postgres:5432/lifeai
+      DATABASE_URL: ${DATABASE_URL:-postgresql://lifeai:lifeai_password@postgres:5432/lifeai}
 
       # Redis
-      REDIS_URL: redis://redis:6379/0
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
 
       # Security
-      SECRET_KEY: dev-secret-key-change-in-production
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
 
-      # OpenAI - CHANGE THIS!
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-placeholder-key}
+      # OpenAI
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required. Set it in .env file}
 
       # Vector DB (in-memory for dev, pinecone for prod)
-      VECTOR_DB_TYPE: in-memory
+      VECTOR_DB_TYPE: ${VECTOR_DB_TYPE:-in-memory}
 
       # Environment
-      ENVIRONMENT: development
-      DEBUG: "true"
-      LOG_LEVEL: INFO
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-true}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
 
       # CORS
-      ALLOWED_ORIGINS: http://localhost:3000,http://frontend:3000
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://frontend:3000}
     ports:
       - "8000:8000"
     volumes:
@@ -96,7 +96,7 @@ services:
       backend:
         condition: service_healthy
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
     ports:
       - "3000:3000"
     volumes:
