@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Form
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, Literal
@@ -13,6 +13,7 @@ from app.services.multimodal import (
     TTSService,
     VisionService
 )
+from app.middleware.rate_limit import multimodal_limiter
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,8 @@ class ImageAnalysisResponse(BaseModel):
 @router.post("/transcribe", response_model=TranscriptionResponse)
 async def transcribe_speech(
     file: UploadFile = File(...),
-    language: Optional[str] = None
+    language: Optional[str] = None,
+    _: None = Depends(multimodal_limiter)
 ):
     """
     Transcribe speech to text using OpenAI Whisper.
@@ -91,7 +93,10 @@ async def transcribe_speech(
 
 
 @router.post("/synthesize")
-async def synthesize_text_to_speech(request: TTSRequest):
+async def synthesize_text_to_speech(
+    request: TTSRequest,
+    _: None = Depends(multimodal_limiter)
+):
     """
     Synthesize speech from text using OpenAI TTS.
 
@@ -141,6 +146,7 @@ async def synthesize_text_to_speech(request: TTSRequest):
 async def analyze_image_endpoint(
     file: UploadFile = File(...),
     prompt: str = Form("Describe this image in detail."),
+    _limiter: None = Depends(multimodal_limiter),
     analysis_type: str = Form("general")
 ):
     """
@@ -192,7 +198,10 @@ async def analyze_image_endpoint(
 
 
 @router.post("/ocr")
-async def extract_text_from_image(file: UploadFile = File(...)):
+async def extract_text_from_image(
+    file: UploadFile = File(...),
+    _: None = Depends(multimodal_limiter)
+):
     """
     Extract text from image (OCR).
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, field_validator
 from datetime import datetime
@@ -12,6 +12,7 @@ from app.security.auth import (
     create_refresh_token,
     get_current_user
 )
+from app.middleware.rate_limit import login_limiter
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -45,7 +46,11 @@ class Token(BaseModel):
 
 
 @router.post("/register", response_model=Token)
-async def register(user_data: UserRegister, db: Session = Depends(get_db)):
+async def register(
+    user_data: UserRegister,
+    db: Session = Depends(get_db),
+    _: None = Depends(login_limiter)
+):
     """Register a new user"""
     # Check if user exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
@@ -73,7 +78,11 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-async def login(credentials: UserLogin, db: Session = Depends(get_db)):
+async def login(
+    credentials: UserLogin,
+    db: Session = Depends(get_db),
+    _: None = Depends(login_limiter)
+):
     """Login user"""
     user = db.query(User).filter(User.email == credentials.email).first()
 

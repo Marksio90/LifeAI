@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from sqlalchemy.orm import Session
@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.conversation import Conversation
 from app.security.auth import get_current_user
 from app.db.session import get_db
+from app.middleware.rate_limit import chat_limiter
 import logging
 
 logger = logging.getLogger(__name__)
@@ -64,7 +65,10 @@ async def start_chat(
 
 
 @router.post("/message")
-async def send_message(data: MessageRequest):
+async def send_message(
+    data: MessageRequest,
+    _: None = Depends(chat_limiter)
+):
     """
     Send a message to the AI assistant.
 
