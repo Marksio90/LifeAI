@@ -91,6 +91,56 @@ export async function resumeConversation(conversationId: string) {
   return res.json();
 }
 
+// Profile API functions
+export async function getProfile() {
+  const res = await fetch(`${API_URL}/auth/profile`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to fetch profile');
+  }
+  return res.json();
+}
+
+export async function updateProfile(data: {
+  full_name?: string;
+  preferred_language?: string;
+  preferred_voice?: string;
+  preferences?: any;
+}) {
+  const res = await fetch(`${API_URL}/auth/profile`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to update profile');
+  }
+  return res.json();
+}
+
+export async function changePassword(data: {
+  current_password: string;
+  new_password: string;
+}) {
+  const res = await fetch(`${API_URL}/auth/change-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.detail || 'Failed to change password');
+  }
+  return res.json();
+}
+
 // Multimodal API functions
 export async function transcribeAudio(audioBlob: Blob, language?: string): Promise<any> {
   const formData = new FormData();
