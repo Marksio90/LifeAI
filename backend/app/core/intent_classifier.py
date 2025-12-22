@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Dict, Any
 from app.schemas.common import Intent, IntentType, AgentType, Context, Message
 from app.services.llm_client import call_llm
@@ -26,29 +27,17 @@ Analyze the user's message and classify their intent. The platform has the follo
 5. TASK_MANAGEMENT AGENT - handles: tasks, to-do lists, reminders, scheduling, time management
 6. GENERAL - handles: general conversation, unclear requests, greetings
 
-You must return a JSON object with this exact structure:
-{
-  "intent_type": "<one of: general_conversation, health_query, finance_query, relationship_advice, career_planning, task_management, multi_domain>",
-  "confidence": <float between 0.0 and 1.0>,
-  "agent_types": ["<list of relevant agent types: general, health, finance, relations, personal_development, task_management>"],
-  "requires_multi_agent": <true if multiple agents needed, false otherwise>,
-  "entities": {
-    "<key>": "<value>"
-  },
-  "reasoning": "<brief explanation of classification>"
-}
-
-IMPORTANT:
-- If the request involves multiple domains (e.g., "I want to lose weight and save money for gym"), set requires_multi_agent to true and list all relevant agent types
-- Confidence should reflect how clear the intent is (0.0-1.0)
-- Extract relevant entities (dates, amounts, names, etc.)
-- Always return valid JSON only
-
 User message: {user_message}
 
 Context (last few messages): {context}
 
-Return only the JSON object, no other text."""
+Return ONLY a valid JSON object with this exact structure (no explanations, no markdown, just pure JSON):
+{{"intent_type": "general_conversation", "confidence": 0.8, "agent_types": ["general"], "requires_multi_agent": false, "entities": {{}}, "reasoning": "brief explanation"}}
+
+Valid intent_type values: general_conversation, health_query, finance_query, relationship_advice, career_planning, task_management, multi_domain
+Valid agent_types values: general, health, finance, relations, personal_development, task_management
+
+CRITICAL: Return ONLY the JSON object. No additional text before or after. Start with {{ and end with }}."""
 
     async def classify(self, user_message: str, context: Context) -> Intent:
         """
@@ -71,9 +60,13 @@ Return only the JSON object, no other text."""
                 context=recent_context
             )
 
-            # Call LLM
+            # Call LLM with JSON mode to ensure valid JSON response
             messages = [{"role": "system", "content": prompt}]
-            response = await call_llm(messages)
+            response = await call_llm(
+                messages,
+                temperature=0.3,  # Lower temperature for more deterministic classification
+                response_format={"type": "json_object"}  # Force JSON output
+            )
 
             # Parse JSON response
             classification = self._parse_classification(response)
@@ -124,23 +117,38 @@ Return only the JSON object, no other text."""
         Parse LLM response into classification dict.
 
         Handles potential JSON parsing errors and provides fallback.
+        Uses multiple strategies to extract valid JSON.
         """
         try:
-            # Try to extract JSON from response
-            # Sometimes LLM adds extra text, so we try to find JSON block
-            response = response.strip()
+            # Strategy 1: Clean and direct parse
+            cleaned = response.strip()
 
-            # If response contains markdown code blocks, extract JSON
-            if "```json" in response:
-                start = response.find("```json") + 7
-                end = response.find("```", start)
-                response = response[start:end].strip()
-            elif "```" in response:
-                start = response.find("```") + 3
-                end = response.find("```", start)
-                response = response[start:end].strip()
+            # Remove BOM and other invisible characters
+            cleaned = cleaned.encode('utf-8').decode('utf-8-sig').strip()
 
-            classification = json.loads(response)
+            # Strategy 2: Extract from markdown code blocks
+            if "```json" in cleaned.lower():
+                match = re.search(r'```json\s*\n?(.*?)\n?```', cleaned, re.DOTALL | re.IGNORECASE)
+                if match:
+                    cleaned = match.group(1).strip()
+            elif "```" in cleaned:
+                match = re.search(r'```\s*\n?(.*?)\n?```', cleaned, re.DOTALL)
+                if match:
+                    cleaned = match.group(1).strip()
+
+            # Strategy 3: Find JSON object using regex (look for {..."intent_type"...})
+            if not cleaned.startswith('{'):
+                match = re.search(r'\{[^{}]*"intent_type"[^{}]*\}', cleaned, re.DOTALL)
+                if match:
+                    cleaned = match.group(0)
+                else:
+                    # Try to find any JSON object
+                    match = re.search(r'\{.*?\}', cleaned, re.DOTALL)
+                    if match:
+                        cleaned = match.group(0)
+
+            # Try to parse
+            classification = json.loads(cleaned)
 
             # Validate required fields
             required_fields = ["intent_type", "confidence", "agent_types"]
@@ -152,7 +160,8 @@ Return only the JSON object, no other text."""
 
         except (json.JSONDecodeError, ValueError) as e:
             logger.error(f"Failed to parse classification response: {e}")
-            logger.error(f"Raw response: {response}")
+            logger.error(f"Raw response (first 200 chars): {response[:200]}")
+            logger.debug(f"Full raw response: {response}")
 
             # Return fallback classification
             return {
