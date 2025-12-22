@@ -1,6 +1,7 @@
 """Timeline API - User conversation history endpoints"""
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, cast, String
 from typing import List, Optional
 from datetime import datetime, timedelta
 import logging
@@ -50,24 +51,55 @@ async def get_current_user_timeline(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     days: Optional[int] = Query(None, ge=1, le=365),
+    search: Optional[str] = Query(None, description="Search in title and messages"),
+    sort_by: str = Query("created_at", description="Sort field: created_at, message_count, title"),
+    sort_order: str = Query("desc", description="Sort order: asc or desc"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Get timeline for currently authenticated user.
+    Get timeline for currently authenticated user with search and filtering.
 
-    Returns conversations sorted by most recent first.
+    Returns conversations sorted by most recent first by default.
+
+    Query Parameters:
+    - search: Search in conversation title and message content
+    - days: Filter conversations from last N days
+    - sort_by: Field to sort by (created_at, message_count, title)
+    - sort_order: Sort order (asc or desc)
+    - limit: Max results (1-100)
+    - offset: Pagination offset
     """
     try:
         query = db.query(Conversation).filter(Conversation.user_id == str(current_user.id))
+
+        # Search filter
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(
+                or_(
+                    Conversation.title.ilike(search_term),
+                    Conversation.summary.ilike(search_term),
+                    cast(Conversation.messages, String).ilike(search_term)
+                )
+            )
 
         # Filter by date range if specified
         if days:
             since = datetime.utcnow() - timedelta(days=days)
             query = query.filter(Conversation.created_at >= since)
 
-        # Order by most recent first
-        query = query.order_by(Conversation.created_at.desc())
+        # Sorting
+        sort_column = Conversation.created_at  # default
+        if sort_by == "message_count":
+            sort_column = Conversation.message_count
+        elif sort_by == "title":
+            sort_column = Conversation.title
+
+        if sort_order.lower() == "asc":
+            query = query.order_by(sort_column.asc())
+        else:
+            query = query.order_by(sort_column.desc())
 
         # Apply pagination
         conversations = query.offset(offset).limit(limit).all()
