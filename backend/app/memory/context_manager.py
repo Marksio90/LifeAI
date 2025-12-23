@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import logging
 
@@ -58,7 +58,7 @@ class ContextManager:
                     "session_id": context.session_id,
                     "user_id": context.user_id or "anonymous",
                     "language": context.language.value,
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "user_message": user_message,
                     "assistant_response": assistant_response
                 }
@@ -188,7 +188,7 @@ class ContextManager:
                     "type": "preference",
                     "key": preference_key,
                     "value": str(preference_value),
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
 

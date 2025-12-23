@@ -12,6 +12,10 @@ export async function startChat() {
     method: "POST",
     headers: getAuthHeaders(),
   });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: 'Failed to start chat' }));
+    throw new Error(error.detail || 'Failed to start chat');
+  }
   return res.json();
 }
 
@@ -28,6 +32,10 @@ export async function sendMessage(sessionId: string, message: string, metadata?:
       metadata,
     }),
   });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: 'Failed to send message' }));
+    throw new Error(error.detail || 'Failed to send message');
+  }
   return res.json();
 }
 
@@ -42,6 +50,10 @@ export async function endChat(sessionId: string) {
       session_id: sessionId,
     }),
   });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: 'Failed to end chat' }));
+    throw new Error(error.detail || 'Failed to end chat');
+  }
   return res.json();
 }
 
@@ -68,6 +80,10 @@ export async function getTimeline(params?: {
   const res = await fetch(url, {
     headers: getAuthHeaders(),
   });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: 'Failed to fetch timeline' }));
+    throw new Error(error.detail || 'Failed to fetch timeline');
+  }
   return res.json();
 }
 

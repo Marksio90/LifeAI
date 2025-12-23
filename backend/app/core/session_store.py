@@ -3,7 +3,7 @@ Session storage with Redis persistence and in-memory fallback.
 """
 import logging
 from typing import Optional, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 from app.schemas.common import Context, Message, Language
 from app.core.redis_client import get_redis_client
 
@@ -81,7 +81,7 @@ class SessionStore:
                 Message(
                     role=msg["role"],
                     content=msg["content"],
-                    timestamp=datetime.fromisoformat(msg["timestamp"]) if msg.get("timestamp") else datetime.utcnow(),
+                    timestamp=datetime.fromisoformat(msg["timestamp"]) if msg.get("timestamp") else datetime.now(timezone.utc),
                     metadata=msg.get("metadata", {})
                 )
                 for msg in data.get("history", [])
