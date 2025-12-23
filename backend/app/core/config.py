@@ -2,7 +2,6 @@
 import os
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
 from app.core.secrets import get_secrets_manager
 
 
@@ -39,15 +38,18 @@ class Settings(BaseSettings):
     pinecone_environment: str = "us-east-1"
     pinecone_index_name: str = "lifeai-embeddings"
 
-    # CORS - Will be parsed manually from comma-separated string
-    allowed_origins: List[str] = Field(default=["http://localhost:3000"])
-
     model_config = SettingsConfigDict(
         env_file=".env",
-        case_sensitive=False,
-        # Exclude allowed_origins from automatic ENV parsing
-        env_ignore=['allowed_origins']
+        case_sensitive=False
     )
+
+    # CORS origins - will be populated manually in load()
+    _allowed_origins: List[str] = []
+
+    @property
+    def allowed_origins(self) -> List[str]:
+        """Get allowed origins list."""
+        return self._allowed_origins if self._allowed_origins else ["http://localhost:3000"]
 
     @classmethod
     def load(cls) -> "Settings":
@@ -76,7 +78,7 @@ class Settings(BaseSettings):
 
         # Parse CORS origins
         origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
-        settings.allowed_origins = [o.strip() for o in origins_str.split(",")]
+        settings._allowed_origins = [o.strip() for o in origins_str.split(",")]
 
         # Set debug mode based on environment
         settings.debug = settings.environment == "development"
