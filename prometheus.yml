@@ -1,0 +1,42 @@
+# Prometheus configuration for LifeAI monitoring
+#
+# To use this configuration:
+# 1. Install Prometheus: https://prometheus.io/download/
+# 2. Run: prometheus --config.file=prometheus.yml
+# 3. Access Prometheus UI: http://localhost:9090
+# 4. Access Grafana (if installed): http://localhost:3000
+
+global:
+  scrape_interval: 15s  # Scrape targets every 15 seconds
+  evaluation_interval: 15s  # Evaluate rules every 15 seconds
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager)
+  external_labels:
+    monitor: 'lifeai-monitor'
+    environment: 'development'
+
+# Scrape configurations
+scrape_configs:
+  # LifeAI Backend metrics
+  - job_name: 'lifeai-backend'
+    static_configs:
+      - targets: ['localhost:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s  # Scrape more frequently for backend
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+# Optional: Alerting rules
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - localhost:9093
+
+# Optional: Rule files for alerts
+# rule_files:
+#   - "alerts.yml"

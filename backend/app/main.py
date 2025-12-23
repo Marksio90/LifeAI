@@ -8,6 +8,8 @@ from app.api.timeline import router as timeline_router
 from app.api.multimodal import router as multimodal_router
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
+from app.api.metrics import router as metrics_router
+from app.middleware.prometheus_middleware import PrometheusMiddleware
 from app.core import initialize_agents
 
 # Configure logging
@@ -49,12 +51,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Prometheus middleware (collect HTTP metrics)
+app.add_middleware(PrometheusMiddleware)
+
 # ROUTERS
 app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(chat_router)
 app.include_router(timeline_router)
 app.include_router(multimodal_router)
+app.include_router(metrics_router)
 
 
 @app.get("/")
