@@ -1,7 +1,8 @@
 """Application configuration management."""
 import os
 from typing import List
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 from app.core.secrets import get_secrets_manager
 
 
@@ -38,13 +39,15 @@ class Settings(BaseSettings):
     pinecone_environment: str = "us-east-1"
     pinecone_index_name: str = "lifeai-embeddings"
 
-    # CORS
-    allowed_origins: List[str] = ["http://localhost:3000"]
+    # CORS - Will be parsed manually from comma-separated string
+    allowed_origins: List[str] = Field(default=["http://localhost:3000"])
 
-    class Config:
-        """Pydantic config."""
-        env_file = ".env"
-        case_sensitive = False
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        # Exclude allowed_origins from automatic ENV parsing
+        env_ignore=['allowed_origins']
+    )
 
     @classmethod
     def load(cls) -> "Settings":
