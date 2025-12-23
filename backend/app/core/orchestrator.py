@@ -64,7 +64,8 @@ class Orchestrator:
     async def process_message(
         self,
         session_id: str,
-        user_message: str
+        user_message: str,
+        message_metadata: dict[str, any] | None = None
     ) -> OrchestratorResponse:
         """
         Process a user message within a session.
@@ -72,6 +73,7 @@ class Orchestrator:
         Args:
             session_id: Session identifier
             user_message: User's message
+            message_metadata: Optional metadata (e.g., modality type, file info)
 
         Returns:
             OrchestratorResponse: System response
@@ -84,11 +86,12 @@ class Orchestrator:
             context = self.sessions[session_id]
 
         try:
-            # Add user message to history
+            # Add user message to history with metadata
             user_msg = Message(
                 role="user",
                 content=user_message,
-                timestamp=datetime.utcnow()
+                timestamp=datetime.utcnow(),
+                metadata=message_metadata or {}
             )
             context.history.append(user_msg)
 

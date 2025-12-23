@@ -86,7 +86,7 @@ export default function ChatPage() {
     setMessages((m) => [...m, { role: "user", content: userMessage, type: "text" }]);
 
     try {
-      const res = await sendMessage(sessionId, userMessage);
+      const res = await sendMessage(sessionId, userMessage, { modality: "text" });
       setMessages((m) => [...m, { role: "assistant", content: res.reply, type: "text" }]);
 
       // Auto-play TTS if enabled
@@ -117,7 +117,7 @@ export default function ChatPage() {
       setMessages((m) => [...m, { role: "user", content: userMessage, type: "voice" }]);
 
       // Send transcribed text to chat
-      const res = await sendMessage(sessionId, userMessage);
+      const res = await sendMessage(sessionId, userMessage, { modality: "voice" });
       setMessages((m) => [...m, { role: "assistant", content: res.reply, type: "text" }]);
 
       // Auto-play TTS if enabled

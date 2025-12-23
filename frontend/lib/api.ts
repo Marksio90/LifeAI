@@ -15,7 +15,7 @@ export async function startChat() {
   return res.json();
 }
 
-export async function sendMessage(sessionId: string, message: string) {
+export async function sendMessage(sessionId: string, message: string, metadata?: Record<string, any>) {
   const res = await fetch(`${API_URL}/chat/message`, {
     method: "POST",
     headers: {
@@ -25,6 +25,7 @@ export async function sendMessage(sessionId: string, message: string) {
     body: JSON.stringify({
       session_id: sessionId,
       message,
+      metadata,
     }),
   });
   return res.json();
