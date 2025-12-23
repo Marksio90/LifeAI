@@ -3,8 +3,7 @@ import os
 import logging
 from typing import Optional
 
-from app.memory.vector_store import VectorStore
-from app.memory.in_memory_store import InMemoryVectorStore
+from app.memory.vector_store import VectorStore, InMemoryVectorStore
 
 logger = logging.getLogger(__name__)
 

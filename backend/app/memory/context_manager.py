@@ -4,11 +4,8 @@ import uuid
 import logging
 
 from app.schemas.common import Context, Message
-from app.memory.vector_store import (
-    get_vector_store,
-    VectorDocument,
-    SearchResult
-)
+from app.memory.vector_store import VectorDocument, SearchResult
+from app.memory.vector_factory import initialize_vector_store
 from app.memory.embeddings import embed
 
 logger = logging.getLogger(__name__)
@@ -26,7 +23,7 @@ class ContextManager:
     """
 
     def __init__(self):
-        self.vector_store = get_vector_store()
+        self.vector_store = initialize_vector_store()
 
     async def store_conversation(
         self,
