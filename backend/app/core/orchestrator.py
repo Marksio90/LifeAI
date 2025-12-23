@@ -2,6 +2,7 @@ from typing import Dict, Optional
 from app.schemas.common import Context, Message, OrchestratorResponse, Language
 from app.core.router import route_message
 from app.core.agent_registry import AgentRegistry
+from app.core.session_store import get_session_store
 from app.memory.context_manager import get_context_manager
 from app.models.conversation import Conversation
 from app.db.session import SessionLocal
@@ -17,16 +18,16 @@ class Orchestrator:
     Main orchestrator for the multi-agent system.
 
     This is the top-level component that:
-    1. Manages conversation sessions
+    1. Manages conversation sessions (with Redis persistence)
     2. Maintains context
     3. Coordinates with the router
-    4. Handles memory integration (future)
+    4. Handles memory integration
     """
 
     def __init__(self):
         """Initialize the orchestrator."""
         self.registry = AgentRegistry()
-        self.sessions: Dict[str, Context] = {}
+        self.session_store = get_session_store()
         self.context_manager = get_context_manager()
 
     def create_session(
@@ -35,7 +36,7 @@ class Orchestrator:
         language: Language = Language.POLISH
     ) -> str:
         """
-        Create a new conversation session.
+        Create a new conversation session with Redis persistence.
 
         Args:
             user_id: Optional user identifier
@@ -56,7 +57,7 @@ class Orchestrator:
             metadata={"created_at": datetime.utcnow().isoformat()}
         )
 
-        self.sessions[session_id] = context
+        self.session_store.save(session_id, context)
         logger.info(f"Created new session: {session_id}")
 
         return session_id
@@ -79,11 +80,11 @@ class Orchestrator:
             OrchestratorResponse: System response
         """
         # Get or create context
-        context = self.sessions.get(session_id)
+        context = self.session_store.load(session_id)
         if not context:
             logger.warning(f"Session {session_id} not found, creating new one")
             session_id = self.create_session()
-            context = self.sessions[session_id]
+            context = self.session_store.load(session_id)
 
         try:
             # Add user message to history with metadata
@@ -111,8 +112,8 @@ class Orchestrator:
             )
             context.history.append(assistant_msg)
 
-            # Update session
-            self.sessions[session_id] = context
+            # Save session to Redis (persists across restarts)
+            self.session_store.save(session_id, context)
 
             # Store conversation in long-term memory
             await self.context_manager.store_conversation(
@@ -128,8 +129,8 @@ class Orchestrator:
             raise
 
     def get_session(self, session_id: str) -> Optional[Context]:
-        """Get session context."""
-        return self.sessions.get(session_id)
+        """Get session context from Redis or memory."""
+        return self.session_store.load(session_id)
 
     def end_session(self, session_id: str) -> bool:
         """
@@ -141,13 +142,13 @@ class Orchestrator:
         Returns:
             bool: True if session existed and was ended
         """
-        if session_id in self.sessions:
-            context = self.sessions[session_id]
-
+        context = self.session_store.load(session_id)
+        if context:
             # Save conversation to database
             self._save_conversation_to_db(context)
 
-            del self.sessions[session_id]
+            # Remove from Redis
+            self.session_store.delete(session_id)
             logger.info(f"Ended session: {session_id}")
             return True
 
@@ -155,48 +156,19 @@ class Orchestrator:
 
     def get_session_history(self, session_id: str) -> list[Message]:
         """Get conversation history for a session."""
-        context = self.sessions.get(session_id)
+        context = self.session_store.load(session_id)
         return context.history if context else []
 
     def update_language(self, session_id: str, language: Language) -> bool:
         """Update language preference for a session."""
-        context = self.sessions.get(session_id)
+        context = self.session_store.load(session_id)
         if context:
             context.language = language
+            self.session_store.save(session_id, context)
             logger.info(f"Updated session {session_id} language to {language.value}")
             return True
         return False
 
-    def clear_expired_sessions(self, max_age_hours: int = 24) -> int:
-        """
-        Clear sessions older than max_age_hours.
-
-        Args:
-            max_age_hours: Maximum age in hours
-
-        Returns:
-            int: Number of sessions cleared
-        """
-        from datetime import timedelta
-
-        now = datetime.utcnow()
-        max_age = timedelta(hours=max_age_hours)
-        expired_sessions = []
-
-        for session_id, context in self.sessions.items():
-            created_at_str = context.metadata.get("created_at")
-            if created_at_str:
-                created_at = datetime.fromisoformat(created_at_str)
-                if now - created_at > max_age:
-                    expired_sessions.append(session_id)
-
-        for session_id in expired_sessions:
-            del self.sessions[session_id]
-
-        if expired_sessions:
-            logger.info(f"Cleared {len(expired_sessions)} expired sessions")
-
-        return len(expired_sessions)
 
     async def _fetch_relevant_memories(self, context: Context) -> list:
         """
@@ -286,12 +258,17 @@ class Orchestrator:
                 db.close()
 
     def get_stats(self) -> Dict:
-        """Get orchestrator statistics."""
-        return {
-            "active_sessions": len(self.sessions),
+        """Get orchestrator statistics including Redis session storage."""
+        stats = {
             "registered_agents": len(self.registry),
             "active_agents": len(self.registry.get_all_active())
         }
+
+        # Add session storage stats
+        session_stats = self.session_store.get_stats()
+        stats.update(session_stats)
+
+        return stats
 
 
 # Singleton instance

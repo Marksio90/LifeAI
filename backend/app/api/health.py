@@ -6,6 +6,7 @@ from datetime import datetime
 import sys
 
 from app.db.session import get_db
+from app.core.redis_client import get_redis_client
 
 router = APIRouter(prefix="/health", tags=["health"])
 
@@ -17,6 +18,7 @@ class HealthResponse(BaseModel):
     version: str
     python_version: str
     database: str
+    redis: str
 
 
 class ReadinessResponse(BaseModel):
@@ -31,12 +33,16 @@ async def health_check():
     Basic health check endpoint.
     Returns 200 OK if the service is running.
     """
+    redis_client = get_redis_client()
+    redis_status = "connected" if redis_client.is_connected else "disconnected (using in-memory fallback)"
+
     return HealthResponse(
         status="healthy",
         timestamp=datetime.utcnow().isoformat(),
         version="2.1.0",
         python_version=sys.version.split()[0],
-        database="connected"
+        database="connected",
+        redis=redis_status
     )
 
 
@@ -48,6 +54,7 @@ async def readiness_check(db: Session = Depends(get_db)):
     """
     checks = {
         "database": False,
+        "redis": False,
         "openai_api": True,  # Assume available unless we want to ping it
     }
 
@@ -58,8 +65,13 @@ async def readiness_check(db: Session = Depends(get_db)):
     except Exception:
         checks["database"] = False
 
-    # Determine overall readiness
-    ready = all(checks.values())
+    # Check Redis connection
+    redis_client = get_redis_client()
+    checks["redis"] = redis_client.is_connected
+
+    # Determine overall readiness (Redis optional - app can run with in-memory)
+    # Only database and openai_api are required
+    ready = checks["database"] and checks["openai_api"]
 
     return ReadinessResponse(
         ready=ready,
