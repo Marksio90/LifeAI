@@ -11,6 +11,10 @@ from app.api.health import router as health_router
 from app.api.metrics import router as metrics_router
 from app.middleware.prometheus_middleware import PrometheusMiddleware
 from app.core import initialize_agents
+from app.core.config import get_settings
+
+# Load settings
+settings = get_settings()
 
 # Configure logging
 logging.basicConfig(
@@ -45,10 +49,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # Prometheus middleware (collect HTTP metrics)

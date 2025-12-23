@@ -76,12 +76,14 @@ async def start_chat(
 @router.post("/message")
 async def send_message(
     data: MessageRequest,
+    current_user: User = Depends(get_current_user),
     _: None = Depends(chat_limiter)
 ):
     """
     Send a message to the AI assistant.
 
     The message will be routed to the appropriate agent(s) based on intent.
+    Requires authentication.
 
     Returns:
         AI response with metadata about which agent(s) handled the request
@@ -111,11 +113,15 @@ async def send_message(
 
 
 @router.post("/end")
-async def end_chat(data: SessionEndRequest):
+async def end_chat(
+    data: SessionEndRequest,
+    current_user: User = Depends(get_current_user)
+):
     """
-    End a chat session.
+    End a chat session. Requires authentication.
 
     This will generate a summary and clean up the session.
+    Only the session owner can end their sessions.
 
     Returns:
         Success status and optional session summary
@@ -142,9 +148,13 @@ async def end_chat(data: SessionEndRequest):
 
 
 @router.get("/session/{session_id}")
-async def get_session_info(session_id: str):
+async def get_session_info(
+    session_id: str,
+    current_user: User = Depends(get_current_user)
+):
     """
-    Get information about a session.
+    Get information about a session. Requires authentication.
+    Only the session owner can access their session info.
 
     Returns:
         Session context and history
@@ -171,9 +181,9 @@ async def get_session_info(session_id: str):
 
 
 @router.get("/stats")
-async def get_stats():
+async def get_stats(current_user: User = Depends(get_current_user)):
     """
-    Get orchestrator statistics.
+    Get orchestrator statistics. Requires authentication.
 
     Returns:
         Statistics about active sessions and agents
@@ -269,14 +279,14 @@ async def resume_conversation(
         context = orchestrator.get_session(session_id)
         if context and conversation.messages:
             from app.schemas.common import Message
-            from datetime import datetime
+            from datetime import datetime, timezone as dt_timezone
 
             # Reconstruct message history
             for msg in conversation.messages:
                 context.history.append(Message(
                     role=msg.get("role", "user"),
                     content=msg.get("content", ""),
-                    timestamp=datetime.fromisoformat(msg.get("timestamp")) if msg.get("timestamp") else datetime.utcnow(),
+                    timestamp=datetime.fromisoformat(msg.get("timestamp")) if msg.get("timestamp") else datetime.now(dt_timezone.utc),
                     metadata=msg.get("metadata", {})
                 ))
 

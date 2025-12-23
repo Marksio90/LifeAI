@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, cast, String
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 
 from app.db.session import get_db
@@ -86,7 +86,7 @@ async def get_current_user_timeline(
 
         # Filter by date range if specified
         if days:
-            since = datetime.utcnow() - timedelta(days=days)
+            since = datetime.now(timezone.utc) - timedelta(days=days)
             query = query.filter(Conversation.created_at >= since)
 
         # Sorting
@@ -135,23 +135,23 @@ async def get_current_user_timeline(
 
 @router.get("/conversations", response_model=List[ConversationSummary])
 async def get_user_conversations(
-    user_id: str = Query(..., description="User ID to fetch conversations for"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of conversations to return"),
     offset: int = Query(0, ge=0, description="Number of conversations to skip"),
     days: Optional[int] = Query(None, ge=1, le=365, description="Filter conversations from last N days"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Get all conversations for a user (timeline view).
+    Get all conversations for the authenticated user (timeline view).
 
     Returns conversations sorted by most recent first.
     """
     try:
-        query = db.query(Conversation).filter(Conversation.user_id == user_id)
+        query = db.query(Conversation).filter(Conversation.user_id == str(current_user.id))
 
         # Filter by date range if specified
         if days:
-            since = datetime.utcnow() - timedelta(days=days)
+            since = datetime.now(timezone.utc) - timedelta(days=days)
             query = query.filter(Conversation.created_at >= since)
 
         # Order by most recent first
@@ -160,7 +160,7 @@ async def get_user_conversations(
         # Apply pagination
         conversations = query.offset(offset).limit(limit).all()
 
-        logger.info(f"Retrieved {len(conversations)} conversations for user {user_id}")
+        logger.info(f"Retrieved {len(conversations)} conversations for user {current_user.id}")
 
         return [
             ConversationSummary(
@@ -185,14 +185,17 @@ async def get_user_conversations(
 @router.get("/conversation/{conversation_id}", response_model=ConversationDetail)
 async def get_conversation_detail(
     conversation_id: str,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Get detailed information about a specific conversation including all messages.
+    Only the owner can access their conversations.
     """
     try:
         conversation = db.query(Conversation).filter(
-            Conversation.id == conversation_id
+            Conversation.id == conversation_id,
+            Conversation.user_id == str(current_user.id)
         ).first()
 
         if not conversation:
@@ -225,14 +228,16 @@ async def get_conversation_detail(
 @router.delete("/conversation/{conversation_id}")
 async def delete_conversation(
     conversation_id: str,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Delete a specific conversation.
+    Delete a specific conversation. Only the owner can delete their conversations.
     """
     try:
         conversation = db.query(Conversation).filter(
-            Conversation.id == conversation_id
+            Conversation.id == conversation_id,
+            Conversation.user_id == str(current_user.id)
         ).first()
 
         if not conversation:
@@ -256,21 +261,21 @@ async def delete_conversation(
         raise HTTPException(status_code=500, detail="Failed to delete conversation")
 
 
-@router.get("/stats/{user_id}")
+@router.get("/stats")
 async def get_user_stats(
-    user_id: str,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Get statistics about a user's conversations.
+    Get statistics about the authenticated user's conversations.
 
     Returns:
         Total conversations, message count, most used agents, etc.
     """
     try:
-        # Get all conversations for user
+        # Get all conversations for authenticated user
         conversations = db.query(Conversation).filter(
-            Conversation.user_id == user_id
+            Conversation.user_id == str(current_user.id)
         ).all()
 
         total_conversations = len(conversations)
@@ -283,13 +288,13 @@ async def get_user_stats(
                 agent_usage[agent] = agent_usage.get(agent, 0) + 1
 
         # Get recent activity (last 7 days)
-        week_ago = datetime.utcnow() - timedelta(days=7)
+        week_ago = datetime.now(timezone.utc) - timedelta(days=7)
         recent_conversations = [
             conv for conv in conversations
             if conv.created_at >= week_ago
         ]
 
-        logger.info(f"Retrieved stats for user {user_id}")
+        logger.info(f"Retrieved stats for user {current_user.id}")
 
         return {
             "total_conversations": total_conversations,
