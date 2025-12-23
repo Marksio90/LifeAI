@@ -8,6 +8,10 @@ export interface User {
   preferred_voice: string;
   is_premium: boolean;
   created_at: string;
+  preferences?: {
+    auto_play_tts?: boolean;
+    [key: string]: any;
+  };
 }
 
 export interface AuthTokens {

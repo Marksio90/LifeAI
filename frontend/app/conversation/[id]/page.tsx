@@ -209,11 +209,19 @@ export default function ConversationPage() {
                     <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                       {message.content}
                     </p>
-                    {message.metadata?.agent_id && (
-                      <span className="inline-block mt-2 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded">
-                        Agent: {message.metadata.agent_id}
-                      </span>
-                    )}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {message.metadata?.modality && message.metadata.modality !== "text" && (
+                        <span className="inline-block text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
+                          {message.metadata.modality === "voice" && "🎤 Wiadomość głosowa"}
+                          {message.metadata.modality === "image" && "🖼️ Obraz"}
+                        </span>
+                      )}
+                      {message.metadata?.agent_id && (
+                        <span className="inline-block text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded">
+                          Agent: {message.metadata.agent_id}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

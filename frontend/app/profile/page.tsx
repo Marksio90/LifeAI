@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import { getProfile, updateProfile, changePassword } from "@/lib/api";
@@ -60,7 +61,9 @@ export default function ProfilePage() {
       setAutoPlayTTS(data.preferences?.auto_play_tts || false);
     } catch (error) {
       console.error("Error loading profile:", error);
-      setMessage({type: "error", text: "Nie udało się załadować profilu"});
+      const errorMessage = "Nie udało się załadować profilu";
+      setMessage({type: "error", text: errorMessage});
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -81,10 +84,14 @@ export default function ProfilePage() {
         },
       });
 
-      setMessage({type: "success", text: "Profil zaktualizowany pomyślnie!"});
+      const successMessage = "Profil zaktualizowany pomyślnie!";
+      setMessage({type: "success", text: successMessage});
+      toast.success(successMessage);
       loadProfile();
     } catch (error: any) {
-      setMessage({type: "error", text: error.message || "Nie udało się zaktualizować profilu"});
+      const errorMessage = error.message || "Nie udało się zaktualizować profilu";
+      setMessage({type: "error", text: errorMessage});
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -92,14 +99,18 @@ export default function ProfilePage() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (newPassword !== confirmPassword) {
-      setMessage({type: "error", text: "Nowe hasła nie pasują do siebie"});
+      const errorMessage = "Nowe hasła nie pasują do siebie";
+      setMessage({type: "error", text: errorMessage});
+      toast.error(errorMessage);
       return;
     }
 
     if (newPassword.length < 8) {
-      setMessage({type: "error", text: "Nowe hasło musi mieć co najmniej 8 znaków"});
+      const errorMessage = "Nowe hasło musi mieć co najmniej 8 znaków";
+      setMessage({type: "error", text: errorMessage});
+      toast.error(errorMessage);
       return;
     }
 
@@ -112,13 +123,17 @@ export default function ProfilePage() {
         new_password: newPassword,
       });
 
-      setMessage({type: "success", text: "Hasło zmienione pomyślnie!"});
+      const successMessage = "Hasło zmienione pomyślnie!";
+      setMessage({type: "success", text: successMessage});
+      toast.success(successMessage);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setShowPasswordForm(false);
     } catch (error: any) {
-      setMessage({type: "error", text: error.message || "Nie udało się zmienić hasła"});
+      const errorMessage = error.message || "Nie udało się zmienić hasła";
+      setMessage({type: "error", text: errorMessage});
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
     }

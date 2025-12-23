@@ -31,6 +31,10 @@ class MessageRequest(BaseModel):
         max_length=4000,
         description="User message (max 4000 characters to prevent DoS)"
     )
+    metadata: Optional[dict] = Field(
+        default=None,
+        description="Optional metadata (e.g., modality: text/voice/image)"
+    )
 
 
 class SessionEndRequest(BaseModel):
@@ -88,7 +92,8 @@ async def send_message(
         # Process message through multi-agent system
         response = await orchestrator.process_message(
             session_id=data.session_id,
-            user_message=data.message
+            user_message=data.message,
+            message_metadata=data.metadata
         )
 
         return {
