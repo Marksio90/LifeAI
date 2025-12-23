@@ -3,8 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { sendMessage, endChat, transcribeAudio, synthesizeSpeech, analyzeImage } from "@/lib/api";
-import { getSessionId, clearSession } from "@/lib/session";
+import { sendMessage, endChat, transcribeAudio, synthesizeSpeech, analyzeImage, getConversation } from "@/lib/api";
+import { getSessionId, clearSession, getResumedConversationId, clearResumedConversationId } from "@/lib/session";
 import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import VoiceRecorder from "@/components/VoiceRecorder";
@@ -40,6 +40,36 @@ export default function ChatPage() {
       router.push("/");
     }
   }, [sessionId, authLoading, user, router]);
+
+  // Load previous messages if resuming a conversation
+  useEffect(() => {
+    const loadResumedMessages = async () => {
+      const resumedConversationId = getResumedConversationId();
+      if (resumedConversationId && sessionId) {
+        try {
+          const conversation = await getConversation(resumedConversationId);
+
+          // Convert backend message format to frontend format
+          const loadedMessages: MessageType[] = conversation.messages.map((msg: any) => ({
+            role: msg.role === "user" ? "user" : "assistant",
+            content: msg.content,
+            type: msg.metadata?.modality || "text",
+            imageUrl: msg.metadata?.image_url
+          }));
+
+          setMessages(loadedMessages);
+
+          // Clear the resumed conversation ID so it doesn't reload on refresh
+          clearResumedConversationId();
+        } catch (error) {
+          console.error("Error loading resumed conversation:", error);
+          toast.error("Nie udało się załadować historii rozmowy");
+        }
+      }
+    };
+
+    loadResumedMessages();
+  }, [sessionId]);
 
   useEffect(() => {
     scrollToBottom();
