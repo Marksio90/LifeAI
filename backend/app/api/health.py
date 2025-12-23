@@ -1,8 +1,9 @@
 """Health check endpoints for monitoring."""
 from fastapi import APIRouter, status, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 import sys
 
 from app.db.session import get_db
@@ -38,7 +39,7 @@ async def health_check():
 
     return HealthResponse(
         status="healthy",
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
         version="2.1.0",
         python_version=sys.version.split()[0],
         database="connected",
@@ -60,7 +61,7 @@ async def readiness_check(db: Session = Depends(get_db)):
 
     # Check database connection
     try:
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         checks["database"] = True
     except Exception:
         checks["database"] = False

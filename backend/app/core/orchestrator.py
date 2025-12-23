@@ -8,7 +8,7 @@ from app.models.conversation import Conversation
 from app.db.session import SessionLocal
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class Orchestrator:
             history=[],
             user_profile=None,
             relevant_memories=[],
-            metadata={"created_at": datetime.utcnow().isoformat()}
+            metadata={"created_at": datetime.now(timezone.utc).isoformat()}
         )
 
         self.session_store.save(session_id, context)
@@ -91,7 +91,7 @@ class Orchestrator:
             user_msg = Message(
                 role="user",
                 content=user_message,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
                 metadata=message_metadata or {}
             )
             context.history.append(user_msg)
@@ -107,7 +107,7 @@ class Orchestrator:
             assistant_msg = Message(
                 role="assistant",
                 content=response.content,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
                 metadata=response.metadata
             )
             context.history.append(assistant_msg)
@@ -242,7 +242,7 @@ class Orchestrator:
                 messages=messages_json,
                 message_count=len(context.history),
                 agents_used=agents_used,
-                ended_at=datetime.utcnow()
+                ended_at=datetime.now(timezone.utc)
             )
 
             db.add(conversation)

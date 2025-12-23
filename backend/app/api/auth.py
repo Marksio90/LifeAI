@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, field_validator
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.db.session import get_db
 from app.models.user import User
@@ -93,7 +93,7 @@ async def login(
         )
 
     # Update last login
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     db.commit()
 
     # Generate tokens
@@ -180,7 +180,7 @@ async def update_profile(
         if profile_data.preferences is not None:
             current_user.preferences = profile_data.preferences
         
-        current_user.updated_at = datetime.utcnow()
+        current_user.updated_at = datetime.now(timezone.utc)
         db.commit()
         db.refresh(current_user)
         
@@ -220,7 +220,7 @@ async def change_password(
         
         # Update password
         current_user.password_hash = get_password_hash(password_data.new_password)
-        current_user.updated_at = datetime.utcnow()
+        current_user.updated_at = datetime.now(timezone.utc)
         db.commit()
         
         return {

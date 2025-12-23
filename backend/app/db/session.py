@@ -1,17 +1,16 @@
 """Database session management and configuration"""
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Get database URL from environment
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://lifeai:lifeai_password@postgres:5432/lifeai"
-)
+# Get database URL from environment (required)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is required")
 
 # Create SQLAlchemy engine
 engine = create_engine(
@@ -70,7 +69,7 @@ def check_db_connection() -> bool:
     """
     try:
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
         logger.info("Database connection successful")
         return True
