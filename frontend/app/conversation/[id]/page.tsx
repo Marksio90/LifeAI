@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import { getConversation, resumeConversation } from "@/lib/api";
+import { setResumedConversationId } from "@/lib/session";
 
 interface Message {
   role: string;
@@ -66,6 +67,8 @@ export default function ConversationPage() {
     setResuming(true);
     try {
       const response = await resumeConversation(conversationId);
+      // Save conversation ID so chat page can load previous messages
+      setResumedConversationId(conversationId);
       // Redirect to chat with the new session
       router.push(`/?session=${response.session_id}`);
     } catch (error) {
