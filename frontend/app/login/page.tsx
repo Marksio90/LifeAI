@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { login, setTokens, getCurrentUser } from "@/lib/auth";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -27,9 +28,12 @@ export default function LoginPage() {
       const user = await getCurrentUser();
       setUser(user);
 
+      toast.success("Zalogowano pomyślnie!");
       router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Błąd logowania");
+      const errorMessage = err instanceof Error ? err.message : "Błąd logowania";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

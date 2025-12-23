@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { register, setTokens, getCurrentUser } from "@/lib/auth";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -34,9 +35,12 @@ export default function RegisterPage() {
       const user = await getCurrentUser();
       setUser(user);
 
+      toast.success("Konto utworzone pomyślnie!");
       router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Błąd rejestracji");
+      const errorMessage = err instanceof Error ? err.message : "Błąd rejestracji";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

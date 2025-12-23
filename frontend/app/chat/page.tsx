@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { sendMessage, endChat, transcribeAudio, synthesizeSpeech, analyzeImage } from "@/lib/api";
 import { getSessionId, clearSession } from "@/lib/session";
 import { useAuth } from "@/contexts/AuthContext";
@@ -48,6 +49,33 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Auto-play TTS for assistant messages (if enabled in preferences)
+  async function autoPlayAssistantMessage(text: string) {
+    if (!user?.preferences?.auto_play_tts) return;
+
+    try {
+      const audioBlob = await synthesizeSpeech(text, user.preferred_voice || 'nova');
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Stop any currently playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onended = () => {
+        setPlayingAudio(null);
+      };
+
+      await audio.play();
+    } catch (error) {
+      console.error("Error auto-playing TTS:", error);
+      // Fail silently - don't disrupt user experience
+    }
+  }
+
   async function handleSendText() {
     if (!input.trim() || !sessionId || isLoading) return;
 
@@ -60,8 +88,12 @@ export default function ChatPage() {
     try {
       const res = await sendMessage(sessionId, userMessage);
       setMessages((m) => [...m, { role: "assistant", content: res.reply, type: "text" }]);
+
+      // Auto-play TTS if enabled
+      await autoPlayAssistantMessage(res.reply);
     } catch (error) {
       console.error("Error sending message:", error);
+      toast.error("Nie udało się wysłać wiadomości. Spróbuj ponownie.");
       setMessages((m) => [...m, {
         role: "assistant",
         content: "Przepraszam, wystąpił błąd. Spróbuj ponownie.",
@@ -87,8 +119,12 @@ export default function ChatPage() {
       // Send transcribed text to chat
       const res = await sendMessage(sessionId, userMessage);
       setMessages((m) => [...m, { role: "assistant", content: res.reply, type: "text" }]);
+
+      // Auto-play TTS if enabled
+      await autoPlayAssistantMessage(res.reply);
     } catch (error) {
       console.error("Error processing voice:", error);
+      toast.error("Nie udało się przetworzyć nagrania głosowego.");
       setMessages((m) => [...m, {
         role: "assistant",
         content: "Nie udało się przetworzyć nagrania głosowego.",
@@ -117,13 +153,18 @@ export default function ChatPage() {
         imageUrl
       }]);
 
+      const assistantResponse = analysis.description || analysis.analysis;
       setMessages((m) => [...m, {
         role: "assistant",
-        content: analysis.description || analysis.analysis,
+        content: assistantResponse,
         type: "text"
       }]);
+
+      // Auto-play TTS if enabled
+      await autoPlayAssistantMessage(assistantResponse);
     } catch (error) {
       console.error("Error analyzing image:", error);
+      toast.error("Nie udało się przeanalizować obrazu.");
       setMessages((m) => [...m, {
         role: "assistant",
         content: "Nie udało się przeanalizować obrazu.",
@@ -161,6 +202,7 @@ export default function ChatPage() {
       await audio.play();
     } catch (error) {
       console.error("Error playing audio:", error);
+      toast.error("Nie udało się odtworzyć audio.");
       setPlayingAudio(null);
     }
   }
@@ -174,6 +216,7 @@ export default function ChatPage() {
       router.push("/timeline");
     } catch (error) {
       console.error("Error ending chat:", error);
+      toast.error("Nie udało się zakończyć rozmowy.");
     }
   }
 

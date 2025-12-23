@@ -6,11 +6,15 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+    --toast-bg: #ffffff;
+    --toast-text: #1f2937;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
+    --toast-bg: #1f2937;
+    --toast-text: #f9fafb;
   }
 
   body {
