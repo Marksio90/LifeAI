@@ -1,14 +1,26 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
 import { startChat } from "../lib/api";
 import { setSessionId } from "../lib/session";
+import { useEffect } from "react";
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading } = useAuth();
+
+  // Check if there's a session parameter (from resume conversation)
+  useEffect(() => {
+    const sessionId = searchParams.get("session");
+    if (sessionId && user) {
+      // Store the resumed session ID and redirect to chat
+      setSessionId(sessionId);
+      router.push("/chat");
+    }
+  }, [searchParams, user, router]);
 
   async function handleStart() {
     const data = await startChat();
