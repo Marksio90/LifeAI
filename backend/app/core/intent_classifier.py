@@ -126,6 +126,14 @@ CRITICAL: Return ONLY the JSON object. No additional text before or after. Start
             # Remove BOM and other invisible characters
             cleaned = cleaned.encode('utf-8').decode('utf-8-sig').strip()
 
+            # Remove potential text before/after JSON (e.g., "Here is the classification: {...}")
+            # Look for first { and last }
+            first_brace = cleaned.find('{')
+            last_brace = cleaned.rfind('}')
+            if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+                cleaned = cleaned[first_brace:last_brace + 1]
+                logger.debug(f"Extracted JSON from position {first_brace} to {last_brace}")
+
             # Strategy 2: Extract from markdown code blocks
             if "```json" in cleaned.lower():
                 match = re.search(r'```json\s*\n?(.*?)\n?```', cleaned, re.DOTALL | re.IGNORECASE)
@@ -138,17 +146,23 @@ CRITICAL: Return ONLY the JSON object. No additional text before or after. Start
 
             # Strategy 3: Find JSON object using regex (look for {..."intent_type"...})
             if not cleaned.startswith('{'):
-                match = re.search(r'\{[^{}]*"intent_type"[^{}]*\}', cleaned, re.DOTALL)
+                # First try: Look for JSON with intent_type (handle nested braces)
+                match = re.search(r'\{(?:[^{}]|(?:\{[^{}]*\}))*"intent_type"(?:[^{}]|(?:\{[^{}]*\}))*\}', cleaned, re.DOTALL)
                 if match:
                     cleaned = match.group(0)
                 else:
-                    # Try to find any JSON object
-                    match = re.search(r'\{.*?\}', cleaned, re.DOTALL)
+                    # Second try: Find any JSON object (greedy match)
+                    match = re.search(r'\{.*\}', cleaned, re.DOTALL)
                     if match:
                         cleaned = match.group(0)
+                    else:
+                        logger.warning(f"No JSON object found in response, trying last resort")
+                        # Last resort: just try to parse as-is
+                        pass
 
             # Try to parse
             classification = json.loads(cleaned)
+            logger.debug(f"Successfully parsed JSON classification: {classification.get('intent_type')}")
 
             # Validate required fields
             required_fields = ["intent_type", "confidence", "agent_types"]

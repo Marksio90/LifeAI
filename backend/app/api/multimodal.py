@@ -19,6 +19,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/multimodal", tags=["multimodal"])
 
+# File size limits (in bytes)
+MAX_AUDIO_SIZE = 25 * 1024 * 1024  # 25 MB (OpenAI Whisper limit)
+MAX_IMAGE_SIZE = 20 * 1024 * 1024  # 20 MB (GPT-4 Vision limit)
+
 
 class TranscriptionResponse(BaseModel):
     """Response from speech-to-text"""
@@ -71,6 +75,13 @@ async def transcribe_speech(
 
         # Read file
         audio_bytes = await file.read()
+
+        # Validate file size
+        if len(audio_bytes) > MAX_AUDIO_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Audio file too large. Maximum size: {MAX_AUDIO_SIZE / 1024 / 1024:.0f}MB"
+            )
         audio_file = io.BytesIO(audio_bytes)
         audio_file.name = file.filename or "audio.mp3"
 
@@ -174,6 +185,13 @@ async def analyze_image_endpoint(
         # Read image
         image_bytes = await file.read()
 
+        # Validate file size
+        if len(image_bytes) > MAX_IMAGE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Image file too large. Maximum size: {MAX_IMAGE_SIZE / 1024 / 1024:.0f}MB"
+            )
+
         # Analyze based on type
         if analysis_type == "food":
             result = await VisionService.analyze_food(image_bytes)
@@ -222,6 +240,13 @@ async def extract_text_from_image(
 
         # Read image
         image_bytes = await file.read()
+
+        # Validate file size
+        if len(image_bytes) > MAX_IMAGE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Image file too large. Maximum size: {MAX_IMAGE_SIZE / 1024 / 1024:.0f}MB"
+            )
 
         # Extract text
         text = await VisionService.extract_text(image_bytes)

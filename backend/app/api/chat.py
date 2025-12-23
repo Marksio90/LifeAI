@@ -25,7 +25,12 @@ class SessionCreateRequest(BaseModel):
 class MessageRequest(BaseModel):
     """Request to send a message"""
     session_id: str
-    message: str = Field(..., min_length=1)
+    message: str = Field(
+        ...,
+        min_length=1,
+        max_length=4000,
+        description="User message (max 4000 characters to prevent DoS)"
+    )
 
 
 class SessionEndRequest(BaseModel):

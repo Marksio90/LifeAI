@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-lifeai}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lifeai_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required. Set it in .env file}
       POSTGRES_DB: ${POSTGRES_DB:-lifeai}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -49,16 +49,17 @@ services:
       redis:
         condition: service_healthy
     environment:
-      # Database
-      DATABASE_URL: ${DATABASE_URL:-postgresql://lifeai:lifeai_password@postgres:5432/lifeai}
+      # Database (REQUIRED - must be set in .env)
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required. Set it in .env file}
 
       # Redis
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
 
-      # Security
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      # Security (REQUIRED - must be set in .env)
+      # Generate with: openssl rand -hex 32
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required. Set it in .env file}
 
-      # OpenAI
+      # OpenAI (REQUIRED - must be set in .env)
       OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required. Set it in .env file}
 
       # Vector DB (in-memory for dev, pinecone for prod)
