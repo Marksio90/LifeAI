@@ -1,0 +1,56 @@
+{
+  "app": {
+    "title": "LifeAI - Twój Osobisty Asystent AI",
+    "tagline": "Platforma AI z wieloma agentami dla zdrowia, finansów, relacji i rozwoju osobistego"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "chat": "Czat",
+    "profile": "Profil",
+    "settings": "Ustawienia",
+    "logout": "Wyloguj"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "Witaj ponownie, {{name}}!",
+    "conversations": "Rozmowy",
+    "messages": "Wiadomości",
+    "rating": "Średnia Ocena",
+    "responseTime": "Czas Odpowiedzi"
+  },
+  "chat": {
+    "newConversation": "Nowa Rozmowa",
+    "sendMessage": "Wyślij Wiadomość",
+    "typing": "AI pisze...",
+    "placeholder": "Wpisz wiadomość...",
+    "voiceInput": "Wejście Głosowe",
+    "imageUpload": "Prześlij Obraz",
+    "fileAttach": "Załącz Plik"
+  },
+  "agents": {
+    "health": "Zdrowie i Wellness",
+    "finance": "Finanse Osobiste",
+    "relations": "Relacje",
+    "development": "Rozwój Osobisty",
+    "tasks": "Zarządzanie Zadaniami",
+    "general": "Ogólne"
+  },
+  "common": {
+    "loading": "Ładowanie...",
+    "error": "Błąd",
+    "success": "Sukces",
+    "cancel": "Anuluj",
+    "confirm": "Potwierdź",
+    "save": "Zapisz",
+    "delete": "Usuń",
+    "edit": "Edytuj",
+    "search": "Szukaj"
+  },
+  "errors": {
+    "generic": "Coś poszło nie tak. Spróbuj ponownie.",
+    "network": "Błąd sieci. Sprawdź połączenie.",
+    "unauthorized": "Brak autoryzacji. Zaloguj się.",
+    "notFound": "Nie znaleziono.",
+    "rateLimited": "Zbyt wiele zapytań. Zwolnij."
+  }
+}

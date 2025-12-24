@@ -1,0 +1,17 @@
+apiVersion: v2
+name: lifeai
+description: A Helm chart for LifeAI - Advanced Multi-Agent AI Platform
+type: application
+version: 1.0.0
+appVersion: "2.1.0"
+keywords:
+  - ai
+  - chatbot
+  - multi-agent
+  - machine-learning
+maintainers:
+  - name: LifeAI Team
+    email: team@lifeai.com
+sources:
+  - https://github.com/Marksio90/LifeAI
+dependencies: []
