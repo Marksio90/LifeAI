@@ -202,7 +202,7 @@ Return ONLY the aggregated response, no meta-commentary."""
 
         try:
             messages = [{"role": "system", "content": aggregation_prompt}]
-            aggregated = call_llm(messages)
+            aggregated = await call_llm(messages)
             return aggregated
         except Exception as e:
             logger.error(f"Error aggregating responses: {e}")
