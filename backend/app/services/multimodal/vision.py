@@ -214,7 +214,7 @@ Image 2: {result2['description']}
 
 Identify similarities, differences, and key changes."""
 
-        comparison = call_llm([{"role": "user", "content": comparison_prompt}])
+        comparison = await call_llm([{"role": "user", "content": comparison_prompt}])
 
         return {
             "comparison": comparison,
