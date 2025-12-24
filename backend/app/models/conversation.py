@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Integer, JSON
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Integer, JSON, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -39,6 +39,16 @@ class Conversation(Base):
     user = relationship("User", back_populates="conversations")
     feedbacks = relationship("Feedback", back_populates="conversation", cascade="all, delete-orphan")
     agent_interactions = relationship("AgentInteraction", back_populates="conversation", cascade="all, delete-orphan")
+
+    # Composite indexes for common queries
+    __table_args__ = (
+        # Index for user's conversations sorted by creation date (most common query)
+        Index('ix_conversations_user_created', 'user_id', 'created_at'),
+        # Index for user's recent conversations
+        Index('ix_conversations_user_updated', 'user_id', 'updated_at'),
+        # Index for finding conversations by creation date
+        Index('ix_conversations_created_at', 'created_at'),
+    )
 
     def __repr__(self):
         return f"<Conversation(id={self.id}, user_id={self.user_id}, messages={self.message_count})>"
