@@ -1,0 +1,56 @@
+{
+  "app": {
+    "title": "LifeAI - Your Personal AI Assistant",
+    "tagline": "Multi-agent AI platform for health, finance, relationships, and personal development"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "chat": "Chat",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back, {{name}}!",
+    "conversations": "Conversations",
+    "messages": "Messages",
+    "rating": "Average Rating",
+    "responseTime": "Response Time"
+  },
+  "chat": {
+    "newConversation": "New Conversation",
+    "sendMessage": "Send Message",
+    "typing": "AI is typing...",
+    "placeholder": "Type your message...",
+    "voiceInput": "Voice Input",
+    "imageUpload": "Upload Image",
+    "fileAttach": "Attach File"
+  },
+  "agents": {
+    "health": "Health & Wellness",
+    "finance": "Personal Finance",
+    "relations": "Relationships",
+    "development": "Personal Development",
+    "tasks": "Task Management",
+    "general": "General"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network error. Please check your connection.",
+    "unauthorized": "Unauthorized. Please log in.",
+    "notFound": "Not found.",
+    "rateLimited": "Too many requests. Please slow down."
+  }
+}
