@@ -38,6 +38,14 @@ class User(Base):
     mfa_enabled = Column(Boolean, default=False)
     mfa_secret = Column(String(255), nullable=True)
 
+    # Email verification
+    verification_token = Column(String(255), nullable=True)
+    verification_token_expires = Column(DateTime, nullable=True)
+
+    # Password reset
+    password_reset_token = Column(String(255), nullable=True)
+    password_reset_token_expires = Column(DateTime, nullable=True)
+
     # Relationships
     conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
     feedbacks = relationship("Feedback", back_populates="user", cascade="all, delete-orphan")
