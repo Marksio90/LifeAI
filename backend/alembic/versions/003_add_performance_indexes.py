@@ -60,19 +60,8 @@ def upgrade():
     )
 
     # Agent interactions table indexes
-    op.create_index(
-        'ix_agent_interactions_agent_id',
-        'agent_interactions',
-        ['agent_id'],
-        unique=False
-    )
-
-    op.create_index(
-        'ix_agent_interactions_agent_type',
-        'agent_interactions',
-        ['agent_type'],
-        unique=False
-    )
+    # NOTE: agent_id and agent_type already have indexes from SQLAlchemy's index=True
+    # Only create indexes that don't exist from model definitions
 
     op.create_index(
         'ix_agent_interactions_created_at',
@@ -89,12 +78,8 @@ def upgrade():
     )
 
     # Feedbacks table indexes
-    op.create_index(
-        'ix_feedbacks_user_id',
-        'feedbacks',
-        ['user_id'],
-        unique=False
-    )
+    # NOTE: user_id already has index from SQLAlchemy's index=True
+    # Only create indexes that don't exist from model definitions
 
     op.create_index(
         'ix_feedbacks_rating',
@@ -130,17 +115,16 @@ def downgrade():
     """Remove performance indexes."""
 
     # Drop feedbacks indexes
+    # NOTE: Don't drop user_id - it's managed by SQLAlchemy's index=True
     op.drop_index('ix_feedbacks_user_created', table_name='feedbacks')
     op.drop_index('ix_feedbacks_created_at', table_name='feedbacks')
     op.drop_index('ix_feedbacks_helpful', table_name='feedbacks')
     op.drop_index('ix_feedbacks_rating', table_name='feedbacks')
-    op.drop_index('ix_feedbacks_user_id', table_name='feedbacks')
 
     # Drop agent interactions indexes
+    # NOTE: Don't drop agent_id and agent_type - they're managed by SQLAlchemy's index=True
     op.drop_index('ix_agent_interactions_conv_agent', table_name='agent_interactions')
     op.drop_index('ix_agent_interactions_created_at', table_name='agent_interactions')
-    op.drop_index('ix_agent_interactions_agent_type', table_name='agent_interactions')
-    op.drop_index('ix_agent_interactions_agent_id', table_name='agent_interactions')
 
     # Drop conversations indexes
     op.drop_index('ix_conversations_message_count', table_name='conversations')
