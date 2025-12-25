@@ -1,13 +1,13 @@
 import os
 import base64
 from typing import Optional, Union, List
-from openai import OpenAI
+from openai import AsyncOpenAI
 from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 class VisionService:
@@ -53,7 +53,7 @@ class VisionService:
                 image_url = image
 
             # Call GPT-4 Vision API
-            response = client.chat.completions.create(
+            response = await client.chat.completions.create(
                 model=VisionService.MODEL,
                 messages=[
                     {

@@ -1,12 +1,12 @@
 import os
 from typing import Literal, Optional
-from openai import OpenAI
+from openai import AsyncOpenAI
 from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 # Type definitions for voice and model options
@@ -49,7 +49,7 @@ class TTSService:
             Audio bytes (MP3 format)
         """
         try:
-            response = client.audio.speech.create(
+            response = await client.audio.speech.create(
                 model=model,
                 voice=voice,
                 input=text,

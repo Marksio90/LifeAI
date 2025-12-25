@@ -1,12 +1,12 @@
 import os
 from typing import Optional, BinaryIO
-from openai import OpenAI
+from openai import AsyncOpenAI
 from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 class ASRService:
@@ -40,7 +40,7 @@ class ASRService:
         """
         try:
             # Call Whisper API
-            transcript = client.audio.transcriptions.create(
+            transcript = await client.audio.transcriptions.create(
                 model=ASRService.MODEL,
                 file=audio_file,
                 language=language,

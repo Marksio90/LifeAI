@@ -5,6 +5,7 @@ from app.agents.finance import FinanceAgent
 from app.agents.health import HealthAgent
 from app.agents.relations import RelationsAgent
 from app.agents.task_management import TaskManagementAgent
+from app.agents.personal_development import PersonalDevelopmentAgent
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ def initialize_agents():
         HealthAgent(),
         RelationsAgent(),
         TaskManagementAgent(),
+        PersonalDevelopmentAgent(),  # NEW: Career, learning, and personal growth
     ]
 
     for agent in agents:
