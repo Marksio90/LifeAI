@@ -26,11 +26,27 @@ class UserRegister(BaseModel):
     @field_validator('password')
     @classmethod
     def validate_password(cls, v: str) -> str:
-        """Validate password requirements"""
+        """Validate password requirements with strong security policy"""
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
         if len(v.encode('utf-8')) > 72:
             raise ValueError('Password is too long (max 72 bytes)')
+
+        # Enhanced password strength requirements
+        has_upper = any(c.isupper() for c in v)
+        has_lower = any(c.islower() for c in v)
+        has_digit = any(c.isdigit() for c in v)
+        has_special = any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in v)
+
+        if not has_upper:
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not has_lower:
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not has_digit:
+            raise ValueError('Password must contain at least one digit')
+        if not has_special:
+            raise ValueError('Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)')
+
         return v
 
 
@@ -145,11 +161,27 @@ class PasswordChange(BaseModel):
     @field_validator('new_password')
     @classmethod
     def validate_new_password(cls, v: str) -> str:
-        """Validate new password requirements"""
+        """Validate new password requirements with strong security policy"""
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
         if len(v.encode('utf-8')) > 72:
             raise ValueError('Password is too long (max 72 bytes)')
+
+        # Enhanced password strength requirements
+        has_upper = any(c.isupper() for c in v)
+        has_lower = any(c.islower() for c in v)
+        has_digit = any(c.isdigit() for c in v)
+        has_special = any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in v)
+
+        if not has_upper:
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not has_lower:
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not has_digit:
+            raise ValueError('Password must contain at least one digit')
+        if not has_special:
+            raise ValueError('Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)')
+
         return v
 
 
