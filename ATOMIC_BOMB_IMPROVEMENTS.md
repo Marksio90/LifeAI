@@ -226,7 +226,9 @@ interactions = CommonQueryPatterns.get_recent_agent_interactions(
 
 **File**: `backend/alembic/versions/003_add_performance_indexes.py`
 
-**Indexes Added** (16 total):
+**Indexes Added** (16 total: 10 by migration + 6 from SQLAlchemy models):
+
+**Created by Migration (10 indexes):**
 
 Users:
 - `ix_users_email_active` - Login queries
@@ -237,17 +239,22 @@ Conversations:
 - `ix_conversations_message_count` - Sorting by activity
 
 Agent Interactions:
-- `ix_agent_interactions_agent_id` - Agent analytics
-- `ix_agent_interactions_agent_type` - Type filtering
 - `ix_agent_interactions_created_at` - Timeline queries
 - `ix_agent_interactions_conv_agent` - Composite for joins
 
 Feedbacks:
-- `ix_feedbacks_user_id` - User feedback history
 - `ix_feedbacks_rating` - Rating analytics
 - `ix_feedbacks_helpful` - Helpful filter
 - `ix_feedbacks_created_at` - Recent feedback
 - `ix_feedbacks_user_created` - Composite for user timeline
+
+**Already Exist from Model Definitions (6 indexes):**
+- `ix_agent_interactions_agent_id` - From agent_interaction.py:18
+- `ix_agent_interactions_agent_type` - From agent_interaction.py:19
+- `ix_agent_interactions_conversation_id` - From agent_interaction.py:15
+- `ix_feedbacks_user_id` - From feedback.py:15
+- `ix_feedbacks_conversation_id` - From feedback.py:16
+- `ix_feedbacks_agent_id` - From feedback.py:20
 
 **Impact**:
 - Timeline queries: **5-10x faster**
