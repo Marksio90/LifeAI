@@ -166,6 +166,17 @@ async def get_session_info(
         if not context:
             raise HTTPException(status_code=404, detail="Session not found")
 
+        # SECURITY: Verify session ownership - prevent unauthorized access
+        if context.user_id != str(current_user.id):
+            logger.warning(
+                f"User {current_user.id} attempted to access session {session_id} "
+                f"owned by user {context.user_id}"
+            )
+            raise HTTPException(
+                status_code=403,
+                detail="You don't have permission to access this session"
+            )
+
         return {
             "session_id": context.session_id,
             "language": context.language.value,
