@@ -1,6 +1,6 @@
 """Timeline API - User conversation history endpoints"""
 from fastapi import APIRouter, HTTPException, Depends, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy import or_, cast, String
 from typing import List, Optional
 from datetime import datetime, timedelta, timezone
@@ -71,7 +71,11 @@ async def get_current_user_timeline(
     - offset: Pagination offset
     """
     try:
-        query = db.query(Conversation).filter(Conversation.user_id == str(current_user.id))
+        # OPTIMIZED: Use eager loading to prevent N+1 queries
+        query = db.query(Conversation).options(
+            selectinload(Conversation.feedbacks),
+            selectinload(Conversation.agent_interactions)
+        ).filter(Conversation.user_id == str(current_user.id))
 
         # Search filter
         if search:
@@ -147,7 +151,11 @@ async def get_user_conversations(
     Returns conversations sorted by most recent first.
     """
     try:
-        query = db.query(Conversation).filter(Conversation.user_id == str(current_user.id))
+        # OPTIMIZED: Use eager loading to prevent N+1 queries
+        query = db.query(Conversation).options(
+            selectinload(Conversation.feedbacks),
+            selectinload(Conversation.agent_interactions)
+        ).filter(Conversation.user_id == str(current_user.id))
 
         # Filter by date range if specified
         if days:
@@ -193,7 +201,11 @@ async def get_conversation_detail(
     Only the owner can access their conversations.
     """
     try:
-        conversation = db.query(Conversation).filter(
+        # OPTIMIZED: Use eager loading to prevent N+1 queries
+        conversation = db.query(Conversation).options(
+            selectinload(Conversation.feedbacks),
+            selectinload(Conversation.agent_interactions)
+        ).filter(
             Conversation.id == conversation_id,
             Conversation.user_id == str(current_user.id)
         ).first()
@@ -273,8 +285,10 @@ async def get_user_stats(
         Total conversations, message count, most used agents, etc.
     """
     try:
-        # Get all conversations for authenticated user
-        conversations = db.query(Conversation).filter(
+        # OPTIMIZED: Use eager loading for stats calculation
+        conversations = db.query(Conversation).options(
+            selectinload(Conversation.agent_interactions)
+        ).filter(
             Conversation.user_id == str(current_user.id)
         ).all()
 
