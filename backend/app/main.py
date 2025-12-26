@@ -9,12 +9,17 @@ from app.api.multimodal import router as multimodal_router
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
 from app.api.metrics import router as metrics_router
+from app.api.debug import router as debug_router
 from app.middleware.prometheus_middleware import PrometheusMiddleware
 from app.core import initialize_agents
 from app.core.config import get_settings
+from app.monitoring.sentry import init_sentry
 
 # Load settings
 settings = get_settings()
+
+# Initialize Sentry (error tracking)
+init_sentry(settings)
 
 # Configure logging
 logging.basicConfig(
@@ -65,6 +70,7 @@ app.include_router(chat_router)
 app.include_router(timeline_router)
 app.include_router(multimodal_router)
 app.include_router(metrics_router)
+app.include_router(debug_router)  # Debug endpoints (disabled in production)
 
 
 @app.get("/")
