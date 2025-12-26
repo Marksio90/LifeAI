@@ -38,6 +38,12 @@ class Settings(BaseSettings):
     pinecone_environment: str = "us-east-1"
     pinecone_index_name: str = "lifeai-embeddings"
 
+    # Error Tracking
+    sentry_dsn: str = ""
+    sentry_environment: str = "development"
+    sentry_traces_sample_rate: float = 1.0
+    sentry_profiles_sample_rate: float = 1.0
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=False
@@ -76,12 +82,23 @@ class Settings(BaseSettings):
         if pinecone_key := secrets.get_secret("PINECONE_API_KEY"):
             settings.pinecone_api_key = pinecone_key
 
+        if sentry_dsn := secrets.get_secret("SENTRY_DSN"):
+            settings.sentry_dsn = sentry_dsn
+
         # Parse CORS origins
         origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
         settings._allowed_origins = [o.strip() for o in origins_str.split(",")]
 
         # Set debug mode based on environment
         settings.debug = settings.environment == "development"
+
+        # Set Sentry environment
+        settings.sentry_environment = settings.environment
+
+        # Adjust sample rates for production
+        if settings.environment == "production":
+            settings.sentry_traces_sample_rate = 0.1  # 10% in production
+            settings.sentry_profiles_sample_rate = 0.1
 
         return settings
 
