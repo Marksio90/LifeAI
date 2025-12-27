@@ -32,7 +32,16 @@ class PersonalDevelopmentAgent(BaseAgent):
             agent_id="personal_development",
             agent_type=AgentType.PERSONAL_DEVELOPMENT,
             name="Personal Development Coach",
-            description="Career coaching, skill development, and personal growth guidance"
+            description="Career coaching, skill development, and personal growth guidance",
+            capabilities=[
+                "career_planning",
+                "skill_development",
+                "learning_guidance",
+                "personal_growth",
+                "goal_setting",
+                "professional_networking",
+                "education_recommendations"
+            ]
         )
 
     async def can_handle(self, intent: Intent, context: Context) -> float:
