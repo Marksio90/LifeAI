@@ -123,11 +123,11 @@ class PersonalDevelopmentAgent(BaseAgent):
             system_prompt = self._build_system_prompt(context, area)
 
             # Generate response
-            messages = [
-                {"role": "system", "content": system_prompt},
-                *self._build_conversation_history(context),
-                {"role": "user", "content": intent.query}
-            ]
+            messages = [{"role": "system", "content": system_prompt}]
+
+            # Add conversation history
+            for msg in context.history[-4:]:
+                messages.append({"role": msg.role, "content": msg.content})
 
             response_text = await call_llm(messages)
 
@@ -149,7 +149,7 @@ class PersonalDevelopmentAgent(BaseAgent):
 
         except Exception as e:
             logger.error(f"Error in Personal Development Agent: {e}", exc_info=True)
-            return self._error_response(str(e))
+            return self._error_response(e)
 
     def _identify_development_area(self, message: str) -> str:
         """Identify specific area of personal development."""
@@ -279,6 +279,17 @@ ALWAYS:
                     action_items.append(cleaned)
 
         return action_items[:5]  # Limit to top 5 actions
+
+    def _error_response(self, error: Exception) -> AgentResponse:
+        """Generate error response."""
+        return AgentResponse(
+            agent_id=self.agent_id,
+            agent_type=self.agent_type,
+            content="Przepraszam, wystąpił problem podczas przetwarzania Twojego zapytania. Spróbuj sformułować pytanie ponownie.",
+            confidence=0.3,
+            metadata={"error": str(error)},
+            follow_up_actions=[]
+        )
 
 
 # Helper functions for personal development
