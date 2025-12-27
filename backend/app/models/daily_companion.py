@@ -4,6 +4,7 @@ Daily Life Companion models for rituals, check-ins, and daily support.
 This makes the AI a true daily companion that's part of user's routine.
 """
 
+from typing import Dict
 from sqlalchemy import Column, String, Integer, Float, JSON, ForeignKey, DateTime, Text, Boolean, Enum as SQLEnum, Time
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
